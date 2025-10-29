@@ -7,17 +7,14 @@ from sqlalchemy.orm import Session
 import secrets
 
 from src.database import get_db
+from src.models.user import User
+from src.auth import verify_password
 
 app = FastAPI()
 
 # Add session middleware for login management
 # Generate a random secret key for sessions (will change on restart - users will need to re-login)
 app.add_middleware(SessionMiddleware, secret_key=secrets.token_hex(32))
-
-# Static user credentials
-USERS = {
-    "user": "password"
-}
 
 templates = Jinja2Templates(directory="src/templates")
 app.mount("/static", StaticFiles(directory="src/templates"), name="static")
@@ -49,13 +46,22 @@ async def home(request: Request) -> Response:
 
 
 @app.post("/login", response_class=HTMLResponse)
-async def login(request: Request, username: str = Form(...), password: str = Form(...)) -> Response:
+async def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+) -> Response:
     """Handle login form submission."""
-    # Check credentials
-    if username in USERS and USERS[username] == password:
+    # Query user from database
+    user = db.query(User).filter(User.username == username).first()
+
+    # Check if user exists and password is correct
+    if user and verify_password(password, user.password_hash):
         # Set session
         request.session["logged_in"] = True
         request.session["username"] = username
+        request.session["user_id"] = user.id
         # Redirect to user puzzles page
         return RedirectResponse(url=f"/user/{username}/puzzles", status_code=303)
 
