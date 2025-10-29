@@ -1,9 +1,19 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
+import secrets
 
 app = FastAPI()
+
+# Add session middleware for login management
+app.add_middleware(SessionMiddleware, secret_key=secrets.token_hex(32))
+
+# Static user credentials
+USERS = {
+    "user": "password"
+}
 
 templates = Jinja2Templates(directory="src/templates")
 app.mount("/static", StaticFiles(directory="src/templates"), name="static")
@@ -21,17 +31,52 @@ PUZZLES = {
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request) -> HTMLResponse:
-    """Serve the home page with Hello World message."""
+async def home(request: Request) -> Response:
+    """Serve the login page or redirect if already logged in."""
+    if request.session.get("logged_in"):
+        # Redirect to user puzzles page if already logged in
+        user_id = request.session.get("username", "user")
+        return RedirectResponse(url=f"/user/{user_id}/puzzles", status_code=303)
+
     return templates.TemplateResponse(
         "index.html",
         {"request": request}
     )
 
 
+@app.post("/login", response_class=HTMLResponse)
+async def login(request: Request, username: str = Form(...), password: str = Form(...)) -> Response:
+    """Handle login form submission."""
+    # Check credentials
+    if username in USERS and USERS[username] == password:
+        # Set session
+        request.session["logged_in"] = True
+        request.session["username"] = username
+        # Redirect to user puzzles page
+        return RedirectResponse(url=f"/user/{username}/puzzles", status_code=303)
+
+    # Invalid credentials - show login page with error
+    return templates.TemplateResponse(
+        "index.html",
+        {"request": request, "error": "Invalid username or password"}
+    )
+
+
+@app.get("/logout")
+async def logout(request: Request) -> Response:
+    """Log out the user and redirect to login page."""
+    request.session.clear()
+    return RedirectResponse(url="/", status_code=303)
+
+
+
 @app.get("/user/{id}/puzzles", response_class=HTMLResponse)
-async def user_puzzles(request: Request, id: str) -> HTMLResponse:
+async def user_puzzles(request: Request, id: str) -> Response:
     """Display user's available puzzles."""
+    # Check if user is logged in
+    if not request.session.get("logged_in"):
+        return RedirectResponse(url="/", status_code=401)
+
     return templates.TemplateResponse(
         "user_puzzles.html",
         {
@@ -42,8 +87,12 @@ async def user_puzzles(request: Request, id: str) -> HTMLResponse:
 
 
 @app.get("/feeds/{id}", response_class=HTMLResponse)
-async def feed_detail(request: Request, id: str) -> HTMLResponse:
+async def feed_detail(request: Request, id: str) -> Response:
     """Display feed information page."""
+    # Check if user is logged in
+    if not request.session.get("logged_in"):
+        return RedirectResponse(url="/", status_code=401)
+
     # TODO: This will be a lookup in the future
     feed_key = "user_key"
 
