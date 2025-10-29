@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed Details - {{ source_title }}</title>
+    <link rel="stylesheet" href="/static/css/feed_detail.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>{{ source_title }}</h1>
+
+        <table class="info-table">
+            <tr>
+                <th>Latest Puzzle Date</th>
+                <td>{{ latest_puzzle_date }}</td>
+            </tr>
+            <tr>
+                <th>Total Puzzles</th>
+                <td>{{ total_puzzles }}</td>
+            </tr>
+            <tr>
+                <th>Errors</th>
+                <td>
+                    <span class="error-badge {% if errors > 0 %}has-errors{% endif %}">
+                        {{ errors }}
+                    </span>
+                </td>
+            </tr>
+        </table>
+
+        <table class="link-section">
+            <tr>
+                <th>Feed JSON</th>
+            </tr>
+            <tr>
+                <td>
+                    <div class="feed-url-container">
+                        <a href="{{ feed_url }}" class="feed-link">{{ feed_url }}</a>
+                        <button class="copy-btn" onclick="copyFeedUrl()">Copy</button>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        function copyFeedUrl() {
+            const feedUrl = "{{ feed_url }}";
+            const fullUrl = window.location.origin + feedUrl;
+            navigator.clipboard.writeText(fullUrl).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>
