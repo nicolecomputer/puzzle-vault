@@ -2,15 +2,15 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
-import secrets
 
 from src.router import router
+from src.config import settings
 
 app = FastAPI()
 
 # Add session middleware for login management
-# Generate a random secret key for sessions (will change on restart - users will need to re-login)
-app.add_middleware(SessionMiddleware, secret_key=secrets.token_hex(32))
+# Using persistent secret key from environment variables
+app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY)
 
 templates = Jinja2Templates(directory="src/templates")
 app.mount("/static", StaticFiles(directory="src/templates"), name="static")

@@ -1,0 +1,39 @@
+"""Application configuration management."""
+import os
+import secrets
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+# ENV_PATH can be set as an environment variable (e.g., in Docker)
+# If not set, defaults to config/.env in the project root
+env_path = os.getenv("ENV_PATH", str(Path(__file__).parent.parent / "config" / ".env"))
+load_dotenv(dotenv_path=env_path, override=False)
+
+
+class Settings:
+    """Application settings loaded from environment variables."""
+
+    # Session secret key for encrypting session cookies
+    # If not set in environment, generate a random one (will change on restart)
+    SESSION_SECRET_KEY: str = os.getenv("SESSION_SECRET_KEY", secrets.token_hex(32))
+
+    # Config path for database and other files
+    CONFIG_PATH: Path = Path(os.getenv("CONFIG_PATH", Path(__file__).parent.parent / "config"))
+
+    @property
+    def database_url(self) -> str:
+        """Get the database URL."""
+        db_path = self.CONFIG_PATH / "puz-feed.db"
+        return f"sqlite:///{db_path}"
+
+
+# Global settings instance
+settings = Settings()
+
+# Warn if using auto-generated session secret
+if "SESSION_SECRET_KEY" not in os.environ:
+    print("⚠️  WARNING: SESSION_SECRET_KEY not set in environment!")
+    print("   Sessions will not persist across server restarts.")
+    print("   Set SESSION_SECRET_KEY in config/.env for persistent sessions.")
+    print("   You can generate one with: python -c \"import secrets; print(secrets.token_hex(32))\"")
