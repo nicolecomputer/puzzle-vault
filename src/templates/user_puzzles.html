@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Puzzles</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/puzzles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>My Puzzles</h1>
+
+        <div class="puzzles-grid">
+            {% for puzzle in puzzles %}
+            <div class="puzzle-card">
+                <h2>{{ puzzle.name }}</h2>
+                <div class="puzzle-info">
+                    <div class="puzzle-info-row">
+                        <span class="puzzle-info-label">Errors</span>
+                        <span class="puzzle-info-value">
+                            <span class="error-badge {% if puzzle.errors > 0 %}has-errors{% endif %}">
+                                {{ puzzle.errors }}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                <div class="puzzle-actions">
+                    <a href="/feeds/{{ puzzle.id }}" class="view-feed-btn">View Feed</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+
+</html>

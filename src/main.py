@@ -8,6 +8,17 @@ app = FastAPI()
 templates = Jinja2Templates(directory="src/templates")
 app.mount("/static", StaticFiles(directory="src/templates"), name="static")
 
+# Shared puzzle data structure
+PUZZLES = {
+    "avcx": {
+        "id": "avcx",
+        "name": "AVCX",
+        "latest_puzzle_date": "October 29",
+        "total_puzzles": 42,
+        "errors": 0
+    }
+}
+
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> HTMLResponse:
@@ -18,19 +29,39 @@ async def home(request: Request) -> HTMLResponse:
     )
 
 
+@app.get("/user/{id}/puzzles", response_class=HTMLResponse)
+async def user_puzzles(request: Request, id: str) -> HTMLResponse:
+    """Display user's available puzzles."""
+    return templates.TemplateResponse(
+        "user_puzzles.html",
+        {
+            "request": request,
+            "puzzles": list(PUZZLES.values())
+        }
+    )
+
+
 @app.get("/feeds/{id}", response_class=HTMLResponse)
 async def feed_detail(request: Request, id: str) -> HTMLResponse:
     """Display feed information page."""
     # TODO: This will be a lookup in the future
     feed_key = "user_key"
 
-    # Mock data - replace with actual data source later
+    # Get puzzle data from shared structure
+    puzzle = PUZZLES.get(id, {
+        "id": id,
+        "name": "Unknown",
+        "latest_puzzle_date": "N/A",
+        "total_puzzles": 0,
+        "errors": 0
+    })
+
     feed_data = {
         "request": request,
-        "source_title": "AVXC",
-        "latest_puzzle_date": "October 29",
-        "total_puzzles": 42,
-        "errors": 0,
+        "source_title": puzzle["name"],
+        "latest_puzzle_date": puzzle["latest_puzzle_date"],
+        "total_puzzles": puzzle["total_puzzles"],
+        "errors": puzzle["errors"],
         "feed_url": f"/feeds/{id}.json?key={feed_key}"
     }
 
