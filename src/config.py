@@ -18,6 +18,9 @@ class Settings:
     # If not set in environment, generate a random one (will change on restart)
     SESSION_SECRET_KEY: str = os.getenv("SESSION_SECRET_KEY", secrets.token_hex(32))
 
+    # Session timeout in seconds (default: 1 hour)
+    SESSION_MAX_AGE: int = int(os.getenv("SESSION_MAX_AGE", "3600"))
+
     # Config path for database and other files
     CONFIG_PATH: Path = Path(os.getenv("CONFIG_PATH", Path(__file__).parent.parent / "config"))
 

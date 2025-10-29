@@ -8,9 +8,11 @@ from src.config import settings
 
 app = FastAPI()
 
-# Add session middleware for login management
-# Using persistent secret key from environment variables
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SESSION_SECRET_KEY,
+    max_age=settings.SESSION_MAX_AGE
+)
 
 templates = Jinja2Templates(directory="src/templates")
 app.mount("/static", StaticFiles(directory="src/templates"), name="static")
