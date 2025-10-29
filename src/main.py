@@ -8,7 +8,7 @@ import secrets
 
 from src.database import get_db
 from src.models.user import User
-from src.auth import verify_password
+from src.auth import verify_password, require_auth
 
 app = FastAPI()
 
@@ -81,12 +81,9 @@ async def logout(request: Request) -> Response:
 
 
 @app.get("/user/{id}/puzzles", response_class=HTMLResponse)
+@require_auth
 async def user_puzzles(request: Request, id: str) -> Response:
     """Display user's available puzzles."""
-    # Check if user is logged in
-    if not request.session.get("logged_in"):
-        return RedirectResponse(url="/", status_code=401)
-
     return templates.TemplateResponse(
         "user_puzzles.html",
         {
@@ -106,12 +103,9 @@ async def get_feed(id: str, key: str) -> JSONResponse:
 
 
 @app.get("/feeds/{id}", response_class=HTMLResponse)
+@require_auth
 async def feed_detail(request: Request, id: str) -> Response:
     """Display feed information page."""
-    # Check if user is logged in
-    if not request.session.get("logged_in"):
-        return RedirectResponse(url="/", status_code=401)
-
     # TODO: This will be a lookup in the future
     feed_key = "user_key"
 
