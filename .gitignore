@@ -71,3 +71,8 @@ venv.bak/
 # Database
 *.db
 *.sqlite3
+
+# Config directory - ignore everything except examples and docs
+config/*
+!config/.env.example
+!config/README.md
