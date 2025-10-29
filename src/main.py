@@ -86,6 +86,15 @@ async def user_puzzles(request: Request, id: str) -> Response:
     )
 
 
+@app.get("/feeds/{id}.json")
+async def get_feed(id: str, key: str) -> JSONResponse:
+    """Return a JSON feed for the given ID and key."""
+    feed_data = {
+        "version": "https://jsonfeed.org/version/1.1",
+    }
+    return JSONResponse(content=feed_data)
+
+
 @app.get("/feeds/{id}", response_class=HTMLResponse)
 async def feed_detail(request: Request, id: str) -> Response:
     """Display feed information page."""
@@ -118,12 +127,3 @@ async def feed_detail(request: Request, id: str) -> Response:
         "feed_detail.html",
         feed_data
     )
-
-
-@app.get("/feeds/{id}.json")
-async def get_feed(id: str, key: str) -> JSONResponse:
-    """Return a JSON feed for the given ID and key."""
-    feed_data = {
-        "version": "https://jsonfeed.org/version/1.1",
-    }
-    return JSONResponse(content=feed_data)
