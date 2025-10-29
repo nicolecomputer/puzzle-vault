@@ -10,6 +10,7 @@ from src.database import Base, SQLALCHEMY_DATABASE_URL
 
 # Import all models so they're registered with Base.metadata
 from src.models.user import User  # noqa: F401
+from src.models.source import Source  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
