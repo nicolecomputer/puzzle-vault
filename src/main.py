@@ -11,6 +11,7 @@ from src.database import get_db
 app = FastAPI()
 
 # Add session middleware for login management
+# Generate a random secret key for sessions (will change on restart - users will need to re-login)
 app.add_middleware(SessionMiddleware, secret_key=secrets.token_hex(32))
 
 # Static user credentials
