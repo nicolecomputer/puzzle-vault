@@ -1,3 +1,5 @@
+import time
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -14,7 +16,10 @@ app.add_middleware(
     max_age=settings.SESSION_MAX_AGE,
 )
 
+CACHE_BUSTER = str(int(time.time()))
+
 templates = Jinja2Templates(directory="src/templates")
+templates.env.globals["cache_buster"] = CACHE_BUSTER
 app.mount("/static", StaticFiles(directory="src/templates"), name="static")
 
 # Shared puzzle data structure
