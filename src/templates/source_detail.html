@@ -60,7 +60,11 @@
             {% if puzzles %}
             {% for puzzle in puzzles %}
             <tr>
-                <td>{% if puzzle.puzzle_date %}{{ puzzle.puzzle_date.strftime('%b %d, %Y') }}{% else %}N/A{% endif %}
+                <td>
+                    <a href="/puzzles/{{ puzzle.id }}?key={{ feed_key }}" class="puzzle-link">
+                        {% if puzzle.puzzle_date %}{{ puzzle.puzzle_date.strftime('%b %d, %Y') }}{% else %}N/A{% endif
+                        %}
+                    </a>
                 </td>
                 <td class="hide-mobile">{{ puzzle.title }}</td>
                 <td class="hide-mobile">{{ puzzle.author or 'Unknown' }}</td>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ puzzle.title }} - Puz Feed</title>
+    <link rel="stylesheet" href="/static/css/base.css?v={{ cache_buster }}">
+    <link rel="stylesheet" href="/static/css/source_detail.css?v={{ cache_buster }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>{{ puzzle.title }}</h1>
+
+        <table class="data-table info-table">
+            <tr>
+                <th>Author</th>
+                <td>{{ puzzle.author or 'Unknown' }}</td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td>{% if puzzle.puzzle_date %}{{ puzzle.puzzle_date.strftime('%B %d, %Y') }}{% else %}N/A{% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Source</th>
+                <td>{{ source.name }}</td>
+            </tr>
+        </table>
+
+        <div style="margin-top: 2rem; text-align: center;">
+            <button class="btn btn-primary" onclick="downloadPuzzle()">Download Puzzle</button>
+        </div>
+    </div>
+
+    <script>
+        function downloadPuzzle() {
+            window.location.href = "/puzzles/{{ puzzle.id }}.puz?key={{ feed_key }}";
+        }
+    </script>
+</body>
+
+</html>

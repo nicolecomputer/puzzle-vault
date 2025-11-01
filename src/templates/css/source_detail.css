@@ -112,6 +112,18 @@
     font-style: italic;
 }
 
+/* Puzzle Link */
+.puzzle-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.puzzle-link:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
 /* Download Button */
 .download-btn {
     background-color: var(--color-primary);

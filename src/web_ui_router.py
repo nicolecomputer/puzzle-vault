@@ -177,6 +177,7 @@ async def source_detail(
         "total_puzzles": total_puzzles,
         "errors": 0,
         "feed_url": f"/feeds/{feed_identifier}.json?key={feed_key}",
+        "feed_key": feed_key,
         "puzzles": puzzles,
         "source_id": id,
         "page": page,

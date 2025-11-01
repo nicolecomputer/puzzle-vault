@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
@@ -15,6 +16,13 @@ from src.models.source import Source
 from src.models.user import User
 
 feed_router = APIRouter()
+
+
+def get_templates() -> Jinja2Templates:
+    """Get templates instance from main app."""
+    from src.main import templates  # type: ignore[attr-defined]
+
+    return templates
 
 
 def get_base_url(request: Request) -> str:
@@ -105,4 +113,52 @@ async def download_puzzle_by_key(
         path=file_path,
         filename=f"{puzzle.title}.puz",
         media_type="application/x-crossword",
+    )
+
+
+@feed_router.get("/puzzles/{puzzle_id}")
+async def puzzle_detail(
+    puzzle_id: str, key: str, request: Request, db: Session = Depends(get_db)
+) -> StarletteResponse:
+    """Display puzzle detail page using feed key authentication."""
+    # Authenticate user by feed key
+    try:
+        key_uuid = uuid.UUID(key)
+    except ValueError:
+        return JSONResponse({"error": "Invalid feed key"}, status_code=401)
+
+    user = db.query(User).filter(User.feed_key == key_uuid).first()
+
+    if not user:
+        return JSONResponse({"error": "Invalid feed key"}, status_code=401)
+
+    # Get the puzzle
+    puzzle = db.query(Puzzle).filter(Puzzle.id == puzzle_id).first()
+
+    if not puzzle:
+        return JSONResponse({"error": "Puzzle not found"}, status_code=404)
+
+    # Check if user has access to this puzzle's source
+    source_ids = {source.id for source in user.sources}
+    if puzzle.source_id not in source_ids:
+        return JSONResponse(
+            {"error": "Access denied: User does not have access to this puzzle source"},
+            status_code=403,
+        )
+
+    # Get the source information
+    source = db.query(Source).filter(Source.id == puzzle.source_id).first()
+
+    if not source:
+        return JSONResponse({"error": "Source not found"}, status_code=404)
+
+    templates = get_templates()
+    return templates.TemplateResponse(
+        "puzzle_detail.html",
+        {
+            "request": request,
+            "puzzle": puzzle,
+            "source": source,
+            "feed_key": key,
+        },
     )
