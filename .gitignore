@@ -75,3 +75,8 @@ venv.bak/
 config/*
 !config/.env.example
 !config/README.md
+
+# Data directory
+data/
+
+test-data/
