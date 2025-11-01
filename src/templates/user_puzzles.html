@@ -17,21 +17,21 @@
         </div>
 
         <div class="puzzles-grid">
-            {% for puzzle in puzzles %}
+            {% for source in sources %}
             <div class="puzzle-card">
-                <h2>{{ puzzle.name }}</h2>
+                <h2>{{ source.name }}</h2>
                 <div class="puzzle-info">
                     <div class="puzzle-info-row">
                         <span class="puzzle-info-label">Errors</span>
                         <span class="puzzle-info-value">
-                            <span class="error-badge {% if puzzle.errors > 0 %}has-errors{% endif %}">
-                                {{ puzzle.errors }}
+                            <span class="error-badge">
+                                0
                             </span>
                         </span>
                     </div>
                 </div>
                 <div class="puzzle-actions">
-                    <a href="/feeds/{{ puzzle.id }}" class="view-feed-btn">View Feed</a>
+                    <a href="/feeds/{{ source.id }}" class="view-feed-btn">View Feed</a>
                 </div>
             </div>
             {% endfor %}

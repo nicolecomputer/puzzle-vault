@@ -1,7 +1,5 @@
 """Route handlers for the puz-feed application."""
 
-from typing import Any
-
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -21,13 +19,6 @@ def get_templates() -> Jinja2Templates:
     from src.main import templates  # type: ignore[attr-defined]
 
     return templates
-
-
-def get_puzzles() -> dict[str, dict[str, Any]]:
-    """Get puzzles data from main app."""
-    from src.main import PUZZLES  # type: ignore[attr-defined]
-
-    return PUZZLES
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -78,12 +69,17 @@ async def logout(request: Request) -> StarletteResponse:
 
 @router.get("/user/{id}/puzzles", response_class=HTMLResponse)
 @require_auth
-async def user_puzzles(request: Request, id: str) -> StarletteResponse:
+async def user_puzzles(
+    request: Request, id: str, db: Session = Depends(get_db)
+) -> StarletteResponse:
     """Display user's available puzzles."""
     templates = get_templates()
-    PUZZLES = get_puzzles()
+    user_id = request.session.get("user_id")
+
+    sources = db.query(Source).filter(Source.user_id == user_id).all()
+
     return templates.TemplateResponse(
-        "user_puzzles.html", {"request": request, "puzzles": list(PUZZLES.values())}
+        "user_puzzles.html", {"request": request, "sources": sources}
     )
 
 
@@ -127,30 +123,25 @@ async def get_feed(id: str, key: str) -> JSONResponse:
 
 @router.get("/feeds/{id}", response_class=HTMLResponse)
 @require_auth
-async def feed_detail(request: Request, id: str) -> StarletteResponse:
+async def feed_detail(
+    request: Request, id: str, db: Session = Depends(get_db)
+) -> StarletteResponse:
     """Display feed information page."""
-    # TODO: This will be a lookup in the future
     feed_key = "user_key"
 
-    # Get puzzle data from shared structure
-    PUZZLES = get_puzzles()
-    puzzle = PUZZLES.get(
-        id,
-        {
-            "id": id,
-            "name": "Unknown",
-            "latest_puzzle_date": "N/A",
-            "total_puzzles": 0,
-            "errors": 0,
-        },
-    )
+    source = db.query(Source).filter(Source.id == id).first()
+
+    if source:
+        source_name = source.name
+    else:
+        source_name = "Unknown"
 
     feed_data = {
         "request": request,
-        "source_title": puzzle["name"],
-        "latest_puzzle_date": puzzle["latest_puzzle_date"],
-        "total_puzzles": puzzle["total_puzzles"],
-        "errors": puzzle["errors"],
+        "source_title": source_name,
+        "latest_puzzle_date": "N/A",
+        "total_puzzles": 0,
+        "errors": 0,
         "feed_url": f"/feeds/{id}.json?key={feed_key}",
     }
 
