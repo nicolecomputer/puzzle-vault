@@ -39,11 +39,16 @@ def get_base_url(request: Request) -> str:
 
 @feed_router.get("/feeds/{id}.json")
 async def get_feed(
-    id: str, key: str, request: Request, db: Session = Depends(get_db)
+    id: str,
+    key: str,
+    request: Request,
+    page: int = 1,
+    db: Session = Depends(get_db),
 ) -> JSONResponse:
     """Return a JSON feed for the given ID and key.
 
     ID can be either a short_code or a UUID.
+    Supports pagination with ?page=N parameter.
     """
     # Authenticate user by feed key
     try:
@@ -72,9 +77,95 @@ async def get_feed(
             status_code=403,
         )
 
-    feed_data = {
+    # Get base URL for constructing absolute URLs
+    base_url = get_base_url(request)
+
+    # Use short_code if available for feed identifier
+    feed_identifier = source.short_code if source.short_code else source.id
+
+    # Sort puzzles by puzzle_date (most recent first)
+    # Puzzles without dates go to the end
+    all_puzzles = sorted(
+        source.puzzles,
+        key=lambda p: p.puzzle_date if p.puzzle_date else p.created_at,
+        reverse=True,
+    )
+
+    # Pagination
+    per_page = 50
+    total_puzzles = len(all_puzzles)
+    total_pages = (total_puzzles + per_page - 1) // per_page if total_puzzles > 0 else 1
+
+    # Ensure page is within valid range
+    if page < 1:
+        page = 1
+    elif page > total_pages:
+        page = total_pages
+
+    offset = (page - 1) * per_page
+    puzzles = all_puzzles[offset : offset + per_page]
+
+    # Build feed data
+    feed_data: dict[str, object] = {
         "version": "https://jsonfeed.org/version/1.1",
+        "title": source.name,
+        "home_page_url": f"{base_url}/sources/{source.id}",
+        "feed_url": f"{base_url}/feeds/{feed_identifier}.json?key={key}",
+        "description": f"A Puzzlecast feed for source: {source.name}",
     }
+
+    # Add next_url if there are more pages
+    if page < total_pages:
+        feed_data["next_url"] = (
+            f"{base_url}/feeds/{feed_identifier}.json?key={key}&page={page + 1}"
+        )
+
+    # Build items array
+    items: list[dict[str, object]] = []
+    for puzzle in puzzles:
+        # Build the item URL (puzzle detail page)
+        item_url = f"{base_url}/puzzles/{puzzle.id}?key={key}"
+
+        # Create the item
+        item: dict[str, object] = {
+            "id": item_url,  # Use full URL as ID per spec recommendation
+            "url": item_url,
+            "title": puzzle.title,
+        }
+
+        # Add content_text (required by spec - must have content_text or content_html)
+        # Build a simple description of the puzzle
+        content_parts = [puzzle.title]
+        if puzzle.author:
+            content_parts.append(f"By {puzzle.author}")
+        if puzzle.puzzle_date:
+            content_parts.append(
+                f"Published {puzzle.puzzle_date.strftime('%B %d, %Y')}"
+            )
+        item["content_text"] = " • ".join(content_parts)
+
+        # Add author if present
+        if puzzle.author:
+            item["authors"] = [{"name": puzzle.author}]
+
+        # Add date_published if puzzle_date is present
+        if puzzle.puzzle_date:
+            # Convert date to RFC 3339 format (YYYY-MM-DD with time at midnight UTC)
+            item["date_published"] = f"{puzzle.puzzle_date.isoformat()}T00:00:00Z"
+
+        # Add attachment for the .puz file
+        download_url = f"{base_url}/puzzles/{puzzle.id}.puz?key={key}"
+        item["attachments"] = [
+            {
+                "url": download_url,
+                "mime_type": "application/x-crossword",
+            }
+        ]
+
+        items.append(item)
+
+    feed_data["items"] = items
+
     return JSONResponse(content=feed_data)
 
 
