@@ -6,7 +6,8 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.config import settings
-from src.router import router
+from src.feed_router import feed_router
+from src.web_ui_router import web_ui_router
 
 app = FastAPI()
 
@@ -22,5 +23,6 @@ templates = Jinja2Templates(directory="src/templates")
 templates.env.globals["cache_buster"] = CACHE_BUSTER
 app.mount("/static", StaticFiles(directory="src/templates"), name="static")
 
-# Include all routes from router
-app.include_router(router)
+# Include all routes from routers
+app.include_router(web_ui_router)
+app.include_router(feed_router)

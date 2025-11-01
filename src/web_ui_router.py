@@ -14,7 +14,7 @@ from src.models.puzzle import Puzzle
 from src.models.source import Source
 from src.models.user import User
 
-router = APIRouter()
+web_ui_router = APIRouter()
 
 
 def get_templates() -> Jinja2Templates:
@@ -24,7 +24,7 @@ def get_templates() -> Jinja2Templates:
     return templates
 
 
-@router.get("/", response_class=HTMLResponse)
+@web_ui_router.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> StarletteResponse:
     """Serve the login page or redirect if already logged in."""
     if request.session.get("logged_in"):
@@ -36,7 +36,7 @@ async def home(request: Request) -> StarletteResponse:
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@router.post("/login", response_class=HTMLResponse)
+@web_ui_router.post("/login", response_class=HTMLResponse)
 async def login(
     request: Request,
     username: str = Form(...),
@@ -63,14 +63,14 @@ async def login(
     )
 
 
-@router.get("/logout")
+@web_ui_router.get("/logout")
 async def logout(request: Request) -> StarletteResponse:
     """Log out the user and redirect to login page."""
     request.session.clear()
     return RedirectResponse(url="/", status_code=303)
 
 
-@router.get("/user/{id}/sources", response_class=HTMLResponse)
+@web_ui_router.get("/user/{id}/sources", response_class=HTMLResponse)
 @require_auth
 async def user_sources(
     request: Request, id: str, page: int = 1, db: Session = Depends(get_db)
@@ -100,7 +100,7 @@ async def user_sources(
     )
 
 
-@router.get("/sources/new", response_class=HTMLResponse)
+@web_ui_router.get("/sources/new", response_class=HTMLResponse)
 @require_auth
 async def new_source(request: Request) -> StarletteResponse:
     """Display form for creating a new source."""
@@ -111,7 +111,7 @@ async def new_source(request: Request) -> StarletteResponse:
     )
 
 
-@router.post("/sources", response_class=HTMLResponse)
+@web_ui_router.post("/sources", response_class=HTMLResponse)
 @require_auth
 async def create_source(
     request: Request,
@@ -135,13 +135,15 @@ async def create_source(
     return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
 
 
-@router.get("/sources/{id}", response_class=HTMLResponse)
+@web_ui_router.get("/sources/{id}", response_class=HTMLResponse)
 @require_auth
 async def source_detail(
     request: Request, id: str, page: int = 1, db: Session = Depends(get_db)
 ) -> StarletteResponse:
     """Display source information page."""
-    feed_key = "user_key"
+    user_id = request.session.get("user_id")
+    user = db.query(User).filter(User.id == user_id).first()
+    feed_key = str(user.feed_key) if user else ""
 
     source = db.query(Source).filter(Source.id == id).first()
 
@@ -182,7 +184,7 @@ async def source_detail(
     return templates.TemplateResponse("source_detail.html", feed_data)
 
 
-@router.get("/puzzles/{puzzle_id}/download", response_class=FileResponse)
+@web_ui_router.get("/puzzles/{puzzle_id}/download", response_class=FileResponse)
 @require_auth
 async def download_puzzle(
     puzzle_id: str, db: Session = Depends(get_db)
