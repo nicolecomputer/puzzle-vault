@@ -1,0 +1,30 @@
+{
+    "files.exclude": {
+        "**/.venv": true,
+        "**/.mypy_cache": true
+    },
+    "github.copilot.runWithoutApproval": [
+        "pipenv *",
+        "pipenv install",
+        "pipenv shell",
+        "pipenv run *",
+        "pipenv lock",
+        "pipenv graph"
+    ],
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "python.analysis.typeCheckingMode": "basic",
+    "python.languageServer": "Pylance",
+    "ruff.enable": true,
+    "editor.rulers": [
+        88
+    ],
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true
+}
