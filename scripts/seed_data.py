@@ -3,11 +3,13 @@
 This script is for development/testing only.
 Run with: pipenv run seed-data
 """
+
 from sqlalchemy.orm import Session
-from src.database import SessionLocal
-from src.config import settings
-from src.models.user import User
+
 from src.auth import hash_password
+from src.config import settings
+from src.database import SessionLocal
+from src.models.user import User
 
 
 def seed_users(db: Session) -> None:
@@ -23,7 +25,6 @@ def seed_users(db: Session) -> None:
         User(
             username="testuser",
             password_hash=hash_password("password"),
-
         ),
         User(
             username="admin",

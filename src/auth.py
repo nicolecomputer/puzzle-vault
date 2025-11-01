@@ -1,6 +1,9 @@
 """Authentication utilities for password hashing and verification."""
-from typing import cast, Callable, Any
+
+from collections.abc import Callable
 from functools import wraps
+from typing import Any, cast
+
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 from passlib.hash import pbkdf2_sha256
@@ -20,6 +23,7 @@ def require_auth(func: Callable[..., Any]) -> Callable[..., Any]:
             # Your route logic here
             pass
     """
+
     @wraps(func)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
         # Find the Request object in the function arguments
@@ -31,7 +35,7 @@ def require_auth(func: Callable[..., Any]) -> Callable[..., Any]:
 
         # Check kwargs as well
         if request is None:
-            request = kwargs.get('request')
+            request = kwargs.get("request")
 
         # If no request found, something is wrong - call the function anyway
         if request is None:

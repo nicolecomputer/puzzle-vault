@@ -1,14 +1,16 @@
 """Route handlers for the puz-feed application."""
+
 from typing import Any
-from fastapi import APIRouter, Request, Form, Depends
+
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
+from src.auth import require_auth, verify_password
 from src.database import get_db
 from src.models.user import User
-from src.auth import verify_password, require_auth
 
 router = APIRouter()
 
@@ -16,12 +18,14 @@ router = APIRouter()
 def get_templates() -> Jinja2Templates:
     """Get templates instance from main app."""
     from src.main import templates  # type: ignore[attr-defined]
+
     return templates
 
 
 def get_puzzles() -> dict[str, dict[str, Any]]:
     """Get puzzles data from main app."""
     from src.main import PUZZLES  # type: ignore[attr-defined]
+
     return PUZZLES
 
 
@@ -34,10 +38,7 @@ async def home(request: Request) -> StarletteResponse:
         return RedirectResponse(url=f"/user/{user_id}/puzzles", status_code=303)
 
     templates = get_templates()
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request}
-    )
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @router.post("/login", response_class=HTMLResponse)
@@ -45,7 +46,7 @@ async def login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> StarletteResponse:
     """Handle login form submission."""
     # Query user from database
@@ -63,8 +64,7 @@ async def login(
     # Invalid credentials - show login page with error
     templates = get_templates()
     return templates.TemplateResponse(
-        "index.html",
-        {"request": request, "error": "Invalid username or password"}
+        "index.html", {"request": request, "error": "Invalid username or password"}
     )
 
 
@@ -82,11 +82,7 @@ async def user_puzzles(request: Request, id: str) -> StarletteResponse:
     templates = get_templates()
     PUZZLES = get_puzzles()
     return templates.TemplateResponse(
-        "user_puzzles.html",
-        {
-            "request": request,
-            "puzzles": list(PUZZLES.values())
-        }
+        "user_puzzles.html", {"request": request, "puzzles": list(PUZZLES.values())}
     )
 
 
@@ -108,13 +104,16 @@ async def feed_detail(request: Request, id: str) -> StarletteResponse:
 
     # Get puzzle data from shared structure
     PUZZLES = get_puzzles()
-    puzzle = PUZZLES.get(id, {
-        "id": id,
-        "name": "Unknown",
-        "latest_puzzle_date": "N/A",
-        "total_puzzles": 0,
-        "errors": 0
-    })
+    puzzle = PUZZLES.get(
+        id,
+        {
+            "id": id,
+            "name": "Unknown",
+            "latest_puzzle_date": "N/A",
+            "total_puzzles": 0,
+            "errors": 0,
+        },
+    )
 
     feed_data = {
         "request": request,
@@ -122,11 +121,8 @@ async def feed_detail(request: Request, id: str) -> StarletteResponse:
         "latest_puzzle_date": puzzle["latest_puzzle_date"],
         "total_puzzles": puzzle["total_puzzles"],
         "errors": puzzle["errors"],
-        "feed_url": f"/feeds/{id}.json?key={feed_key}"
+        "feed_url": f"/feeds/{id}.json?key={feed_key}",
     }
 
     templates = get_templates()
-    return templates.TemplateResponse(
-        "feed_detail.html",
-        feed_data
-    )
+    return templates.TemplateResponse("feed_detail.html", feed_data)
