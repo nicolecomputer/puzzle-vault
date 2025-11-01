@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -61,3 +62,15 @@ def create_source_folders_on_insert(
     from src.config import settings
 
     target.create_folders(settings.puzzles_path)
+
+
+@event.listens_for(Source, "after_delete")
+def delete_source_folders_on_delete(
+    mapper: object, connection: object, target: Source
+) -> None:
+    """Automatically delete folder structure when a source is deleted."""
+    from src.config import settings
+
+    source_path = settings.puzzles_path / target.folder_name
+    if source_path.exists():
+        shutil.rmtree(source_path)
