@@ -83,3 +83,4 @@ test-data/
 
 # Test importers
 scripts/test_**
+reference/
