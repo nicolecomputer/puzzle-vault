@@ -42,7 +42,7 @@ def seed_users(db: Session) -> None:
 
 def main() -> None:
     """Seed the database with development data."""
-    db_path = settings.CONFIG_PATH / "puz-feed.db"
+    db_path = settings.DATA_PATH / "puzfeed.db"
     print(f"Database: {db_path}\n")
 
     if not db_path.exists():

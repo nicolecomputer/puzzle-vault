@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file
 # ENV_PATH can be set as an environment variable (e.g., in Docker)
-# If not set, defaults to config/.env in the project root
-env_path = os.getenv("ENV_PATH", str(Path(__file__).parent.parent / "config" / ".env"))
+# If not set, defaults to data/config/.env in the project root
+env_path = os.getenv("ENV_PATH", str(Path(__file__).parent.parent / "data" / "config" / ".env"))
 load_dotenv(dotenv_path=env_path, override=False)
 
 
@@ -21,22 +21,24 @@ class Settings:
     # Session timeout in seconds (default: 1 hour)
     SESSION_MAX_AGE: int = int(os.getenv("SESSION_MAX_AGE", "3600"))
 
-    # Config path for database and other files
-    CONFIG_PATH: Path = Path(os.getenv("CONFIG_PATH", Path(__file__).parent.parent / "config"))
-
-    # Data path for puzzle files
+    # Data path for all application data (database, config, puzzles)
     DATA_PATH: Path = Path(os.getenv("DATA_PATH", Path(__file__).parent.parent / "data"))
 
     def __init__(self) -> None:
         """Ensure directories exist."""
-        self.CONFIG_PATH.mkdir(parents=True, exist_ok=True)
         self.DATA_PATH.mkdir(parents=True, exist_ok=True)
+        self.config_path.mkdir(parents=True, exist_ok=True)
         self.puzzles_path.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def config_path(self) -> Path:
+        """Get the config directory path."""
+        return self.DATA_PATH / "config"
 
     @property
     def database_url(self) -> str:
         """Get the database URL."""
-        db_path = self.CONFIG_PATH / "puz-feed.db"
+        db_path = self.DATA_PATH / "puzfeed.db"
         return f"sqlite:///{db_path}"
 
     @property
@@ -52,5 +54,5 @@ settings = Settings()
 if "SESSION_SECRET_KEY" not in os.environ:
     print("⚠️  WARNING: SESSION_SECRET_KEY not set in environment!")
     print("   Sessions will not persist across server restarts.")
-    print("   Set SESSION_SECRET_KEY in config/.env for persistent sessions.")
+    print("   Set SESSION_SECRET_KEY in data/config/.env for persistent sessions.")
     print("   You can generate one with: python -c \"import secrets; print(secrets.token_hex(32))\"")
