@@ -80,3 +80,6 @@ config/*
 data/
 
 test-data/
+
+# Test importers
+scripts/test_**
