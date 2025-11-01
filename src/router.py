@@ -99,13 +99,19 @@ async def new_source(request: Request) -> StarletteResponse:
 async def create_source(
     request: Request,
     name: str = Form(...),
+    short_code: str | None = Form(None),
     db: Session = Depends(get_db),
 ) -> StarletteResponse:
     """Create a new source and redirect to puzzles page."""
     user_id = request.session.get("user_id")
     username = request.session.get("username")
 
-    source = Source(name=name, user_id=user_id)
+    if short_code:
+        short_code = short_code.strip()
+        if short_code == "":
+            short_code = None
+
+    source = Source(name=name, user_id=user_id, short_code=short_code)
     db.add(source)
     db.commit()
 

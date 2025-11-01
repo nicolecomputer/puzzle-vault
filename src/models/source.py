@@ -28,6 +28,7 @@ class Source(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
+    short_code: Mapped[str | None] = mapped_column(String, nullable=True, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -37,3 +38,8 @@ class Source(Base):
     puzzles: Mapped[list[Puzzle]] = relationship(
         "Puzzle", back_populates="source", cascade="all, delete-orphan"
     )
+
+    @property
+    def folder_name(self) -> str:
+        """Return short_code if available, otherwise UUID."""
+        return self.short_code if self.short_code else self.id

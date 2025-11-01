@@ -10,6 +10,7 @@ import puz
 
 from src.database import SessionLocal
 from src.models.puzzle import Puzzle
+from src.models.source import Source
 
 logger = logging.getLogger(__name__)
 
@@ -26,28 +27,43 @@ class FileProcessor:
             logger.warning(f"Data directory does not exist: {self.data_dir}")
             return
 
-        for source_dir in self.data_dir.iterdir():
-            if not source_dir.is_dir():
-                continue
+        db = SessionLocal()
+        try:
+            sources = db.query(Source).all()
+            source_lookup = {}
+            for source in sources:
+                source_lookup[source.folder_name] = source.id
 
-            source_id = source_dir.name
-            imports_dir = source_dir / "imports"
+            for source_dir in self.data_dir.iterdir():
+                if not source_dir.is_dir():
+                    continue
 
-            if not imports_dir.exists():
-                continue
+                folder_name = source_dir.name
+                source_id = source_lookup.get(folder_name)
 
-            self._process_source(source_id, imports_dir)
+                if not source_id:
+                    logger.warning(f"Unknown source folder: {folder_name}")
+                    continue
 
-    def _process_source(self, source_id: str, imports_dir: Path):
+                imports_dir = source_dir / "imports"
+
+                if not imports_dir.exists():
+                    continue
+
+                self._process_source(source_id, folder_name, imports_dir)
+        finally:
+            db.close()
+
+    def _process_source(self, source_id: str, folder_name: str, imports_dir: Path):
         """Process all ready imports for a single source."""
         ready_pairs = self._find_ready_pairs(imports_dir)
 
         for puz_file, meta_file in ready_pairs:
             try:
-                self._process_one(source_id, puz_file, meta_file)
+                self._process_one(source_id, folder_name, puz_file, meta_file)
             except Exception as e:
                 logger.exception(f"Failed to process {puz_file.name}")
-                self._move_to_errors(source_id, puz_file, meta_file, str(e))
+                self._move_to_errors(folder_name, puz_file, meta_file, str(e))
 
     def _find_ready_pairs(self, imports_dir: Path) -> list[tuple[Path, Path]]:
         """Find all .puz files that have corresponding .meta.json files."""
@@ -61,7 +77,9 @@ class FileProcessor:
 
         return ready
 
-    def _process_one(self, source_id: str, puz_file: Path, meta_file: Path):
+    def _process_one(
+        self, source_id: str, folder_name: str, puz_file: Path, meta_file: Path
+    ):
         """Process a single puzzle import."""
         with open(meta_file) as f:
             metadata = json.load(f)
@@ -91,16 +109,16 @@ class FileProcessor:
 
             logger.info(f"Created puzzle {puzzle.id}: {title} ({puzzle_date})")
 
-            self._move_to_puzzles(source_id, puz_file, meta_file, puzzle.id)
+            self._move_to_puzzles(folder_name, puz_file, meta_file, puzzle.id)
 
         finally:
             db.close()
 
     def _move_to_puzzles(
-        self, source_id: str, puz_file: Path, meta_file: Path, puzzle_id: str
+        self, folder_name: str, puz_file: Path, meta_file: Path, puzzle_id: str
     ):
         """Move successfully processed files to puzzles/ directory."""
-        puzzles_dir = self.data_dir / source_id / "puzzles"
+        puzzles_dir = self.data_dir / folder_name / "puzzles"
         puzzles_dir.mkdir(parents=True, exist_ok=True)
 
         dest_puz = puzzles_dir / f"{puzzle_id}.puz"
@@ -112,10 +130,10 @@ class FileProcessor:
         logger.info(f"Moved files to {puzzles_dir}")
 
     def _move_to_errors(
-        self, source_id: str, puz_file: Path, meta_file: Path, error_msg: str
+        self, folder_name: str, puz_file: Path, meta_file: Path, error_msg: str
     ):
         """Move failed imports to errors/ directory."""
-        errors_dir = self.data_dir / source_id / "errors"
+        errors_dir = self.data_dir / folder_name / "errors"
         errors_dir.mkdir(parents=True, exist_ok=True)
 
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
