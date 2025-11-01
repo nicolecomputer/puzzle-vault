@@ -11,7 +11,10 @@
 
 <body>
     <div class="container">
-        <h1>My Puzzles</h1>
+        <div class="page-header">
+            <h1>My Puzzles</h1>
+            <a href="/sources/new" class="add-puzzle-btn">+</a>
+        </div>
 
         <div class="puzzles-grid">
             {% for puzzle in puzzles %}

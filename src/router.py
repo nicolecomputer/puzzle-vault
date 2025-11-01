@@ -10,6 +10,7 @@ from starlette.responses import Response as StarletteResponse
 
 from src.auth import require_auth, verify_password
 from src.database import get_db
+from src.models.source import Source
 from src.models.user import User
 
 router = APIRouter()
@@ -84,6 +85,35 @@ async def user_puzzles(request: Request, id: str) -> StarletteResponse:
     return templates.TemplateResponse(
         "user_puzzles.html", {"request": request, "puzzles": list(PUZZLES.values())}
     )
+
+
+@router.get("/sources/new", response_class=HTMLResponse)
+@require_auth
+async def new_source(request: Request) -> StarletteResponse:
+    """Display form for creating a new source."""
+    templates = get_templates()
+    username = request.session.get("username")
+    return templates.TemplateResponse(
+        "new_source.html", {"request": request, "username": username}
+    )
+
+
+@router.post("/sources", response_class=HTMLResponse)
+@require_auth
+async def create_source(
+    request: Request,
+    name: str = Form(...),
+    db: Session = Depends(get_db),
+) -> StarletteResponse:
+    """Create a new source and redirect to puzzles page."""
+    user_id = request.session.get("user_id")
+    username = request.session.get("username")
+
+    source = Source(name=name, user_id=user_id)
+    db.add(source)
+    db.commit()
+
+    return RedirectResponse(url=f"/user/{username}/puzzles", status_code=303)
 
 
 @router.get("/feeds/{id}.json")

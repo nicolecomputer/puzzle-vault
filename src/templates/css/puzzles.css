@@ -1,4 +1,36 @@
 /* Puzzles page specific styles */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    margin: 0;
+}
+
+a.add-puzzle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.375rem;
+    font-size: 1.5rem;
+    font-weight: 300;
+    transition: background-color 0.2s;
+    border: none;
+    line-height: 1;
+}
+
+a.add-puzzle-btn:hover {
+    background-color: #1e40af;
+}
+
 .puzzles-grid {
     display: grid;
     gap: 1.5rem;
