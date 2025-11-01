@@ -1,10 +1,13 @@
-.PHONY: dev start migrate makemigration seed-data test format lint typecheck
+.PHONY: dev start migrate makemigration seed-data test format lint typecheck import
 
 dev:
 	uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 start:
 	uv run uvicorn src.main:app --host 0.0.0.0 --port 8000
+
+import:
+	uv run python -m src.importers.processor
 
 migrate:
 	uv run alembic upgrade head

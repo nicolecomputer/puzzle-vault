@@ -13,6 +13,7 @@ dependencies = [
   "alembic",
   "python-dotenv",
   "passlib[bcrypt]",
+  "puzpy",
 ]
 
 [project.optional-dependencies]
@@ -48,6 +49,7 @@ reportMissingTypeStubs = false
 reportUnknownMemberType = false
 reportUnknownArgumentType = false
 reportUnknownVariableType = false
+reportMissingImports = false
 
 [dependency-groups]
 dev = ["pyright>=1.1.407", "pytest>=8.4.2", "pytest-cov>=7.0.0", "ruff>=0.14.3"]

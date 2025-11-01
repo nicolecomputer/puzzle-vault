@@ -509,6 +509,7 @@ dependencies = [
     { name = "itsdangerous" },
     { name = "jinja2" },
     { name = "passlib", extra = ["bcrypt"] },
+    { name = "puzpy" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "sqlalchemy" },
@@ -536,6 +537,7 @@ requires-dist = [
     { name = "itsdangerous" },
     { name = "jinja2" },
     { name = "passlib", extras = ["bcrypt"] },
+    { name = "puzpy" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'dev'" },
     { name = "python-dotenv" },
@@ -551,6 +553,15 @@ dev = [
     { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
     { name = "ruff", specifier = ">=0.14.3" },
+]
+
+[[package]]
+name = "puzpy"
+version = "0.3.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/06/30/b57c5519e2ff3ec26606922158cf1dc2aafe992292a4bae0fb1756dffa27/puzpy-0.3.2.tar.gz", hash = "sha256:35eac8d8ef3f745d6aa457df8a6f12bde832c4a6bc02827a01ff466f9d552c62", size = 13559, upload-time = "2025-10-23T22:42:10.13Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/68/fe/c45acdf97ad2fcc3f42274bad7dcedf342f7102bfb55a1705599837a0c62/puzpy-0.3.2-py3-none-any.whl", hash = "sha256:429187aad6baf234b73aa368e843071b06a3ed479b12fabfbeeefbce143a2e98", size = 11691, upload-time = "2025-10-23T22:42:08.997Z" },
 ]
 
 [[package]]
