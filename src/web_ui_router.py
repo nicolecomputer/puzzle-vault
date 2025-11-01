@@ -167,13 +167,16 @@ async def source_detail(
         latest_puzzle_date = None
         total_pages = 0
 
+    # Use short_code if available, otherwise use UUID
+    feed_identifier = source.short_code if source and source.short_code else id
+
     feed_data = {
         "request": request,
         "source_title": source_name,
         "latest_puzzle_date": latest_puzzle_date or "N/A",
         "total_puzzles": total_puzzles,
         "errors": 0,
-        "feed_url": f"/feeds/{id}.json?key={feed_key}",
+        "feed_url": f"/feeds/{feed_identifier}.json?key={feed_key}",
         "puzzles": puzzles,
         "source_id": id,
         "page": page,

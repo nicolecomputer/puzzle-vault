@@ -18,7 +18,10 @@ feed_router = APIRouter()
 
 @feed_router.get("/feeds/{id}.json")
 async def get_feed(id: str, key: str, db: Session = Depends(get_db)) -> JSONResponse:
-    """Return a JSON feed for the given ID and key."""
+    """Return a JSON feed for the given ID and key.
+
+    ID can be either a short_code or a UUID.
+    """
     # Authenticate user by feed key
     try:
         key_uuid = uuid.UUID(key)
@@ -30,8 +33,10 @@ async def get_feed(id: str, key: str, db: Session = Depends(get_db)) -> JSONResp
     if not user:
         return JSONResponse({"error": "Invalid feed key"}, status_code=401)
 
-    # Get the source
-    source = db.query(Source).filter(Source.id == id).first()
+    # Get the source - try short_code first, then UUID
+    source = db.query(Source).filter(Source.short_code == id).first()
+    if not source:
+        source = db.query(Source).filter(Source.id == id).first()
 
     if not source:
         return JSONResponse({"error": "Source not found"}, status_code=404)
