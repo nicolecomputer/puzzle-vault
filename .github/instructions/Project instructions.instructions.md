@@ -7,6 +7,7 @@ applyTo: '**'
 - Always make sure the code passes type checking with `make typecheck`
 - Always make sure the code is formatted with `make format`
 - Always use the cache buster query parameter when linking to CSS files in HTML templates
+- All commands should be run through make
 
 ## Puzzle Data Storage Architecture
 

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import DateTime, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
@@ -24,6 +25,9 @@ class User(Base):
         String, unique=True, index=True, nullable=False
     )
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    feed_key: Mapped[uuid.UUID] = mapped_column(
+        Uuid, unique=True, index=True, nullable=False, default=uuid.uuid4
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     sources: Mapped[list[Source]] = relationship("Source", back_populates="user")
