@@ -2,7 +2,10 @@
     "files.exclude": {
         "**/.venv": true,
         "**/.mypy_cache": true,
-        "*cache*": true
+        "*cache*": true,
+        "htmlcov": true,
+        "**/__pycache__": true,
+        ".coverage": true
     },
     "github.copilot.runWithoutApproval": [
         "pipenv *",
