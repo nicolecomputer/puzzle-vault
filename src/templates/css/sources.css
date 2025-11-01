@@ -104,3 +104,45 @@ a.add-puzzle-btn:hover {
 .view-feed-btn:active {
     background-color: #1e3a8a;
 }
+
+/* Pagination styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+}
+
+.pagination-btn {
+    padding: 0.75rem 1.5rem;
+    background-color: transparent;
+    color: #2563eb;
+    text-decoration: underline;
+    border-radius: 0;
+    font-weight: 500;
+    transition: color 0.2s;
+    display: inline-block;
+    min-width: 120px;
+    text-align: center;
+}
+
+.pagination-btn:hover:not(.disabled) {
+    color: #1e40af;
+}
+
+.pagination-btn.disabled {
+    background-color: transparent;
+    color: #cbd5e1;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+.pagination-info {
+    color: #334155;
+    font-weight: 500;
+    min-width: 120px;
+    text-align: center;
+}

@@ -73,16 +73,30 @@ async def logout(request: Request) -> StarletteResponse:
 @router.get("/user/{id}/sources", response_class=HTMLResponse)
 @require_auth
 async def user_sources(
-    request: Request, id: str, db: Session = Depends(get_db)
+    request: Request, id: str, page: int = 1, db: Session = Depends(get_db)
 ) -> StarletteResponse:
     """Display user's available sources."""
     templates = get_templates()
     user_id = request.session.get("user_id")
 
-    sources = db.query(Source).filter(Source.user_id == user_id).all()
+    per_page = 30
+    offset = (page - 1) * per_page
+
+    query = db.query(Source).filter(Source.user_id == user_id)
+    total_sources = query.count()
+    sources = query.offset(offset).limit(per_page).all()
+
+    total_pages = (total_sources + per_page - 1) // per_page
 
     return templates.TemplateResponse(
-        "user_sources.html", {"request": request, "sources": sources}
+        "user_sources.html",
+        {
+            "request": request,
+            "sources": sources,
+            "page": page,
+            "total_pages": total_pages,
+            "user_id": id,
+        },
     )
 
 
@@ -133,7 +147,7 @@ async def get_feed(id: str, key: str) -> JSONResponse:
 @router.get("/sources/{id}", response_class=HTMLResponse)
 @require_auth
 async def source_detail(
-    request: Request, id: str, db: Session = Depends(get_db)
+    request: Request, id: str, page: int = 1, db: Session = Depends(get_db)
 ) -> StarletteResponse:
     """Display source information page."""
     feed_key = "user_key"
@@ -143,15 +157,22 @@ async def source_detail(
     if source:
         source_name = source.name
         total_puzzles = len(source.puzzles)
-        puzzles = sorted(
+        all_puzzles = sorted(
             source.puzzles, key=lambda p: p.puzzle_date or p.created_at, reverse=True
         )
-        latest_puzzle_date = puzzles[0].puzzle_date if puzzles else None
+        latest_puzzle_date = all_puzzles[0].puzzle_date if all_puzzles else None
+
+        # Pagination
+        per_page = 30
+        offset = (page - 1) * per_page
+        puzzles = all_puzzles[offset : offset + per_page]
+        total_pages = (total_puzzles + per_page - 1) // per_page
     else:
         source_name = "Unknown"
         total_puzzles = 0
         puzzles = []
         latest_puzzle_date = None
+        total_pages = 0
 
     feed_data = {
         "request": request,
@@ -162,6 +183,8 @@ async def source_detail(
         "feed_url": f"/feeds/{id}.json?key={feed_key}",
         "puzzles": puzzles,
         "source_id": id,
+        "page": page,
+        "total_pages": total_pages,
     }
 
     templates = get_templates()

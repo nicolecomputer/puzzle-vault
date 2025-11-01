@@ -36,6 +36,24 @@
             </div>
             {% endfor %}
         </div>
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="/user/{{ user_id }}/sources?page={{ page - 1 }}" class="pagination-btn">← Previous</a>
+            {% else %}
+            <span class="pagination-btn disabled">← Previous</span>
+            {% endif %}
+
+            <span class="pagination-info">Page {{ page }} of {{ total_pages }}</span>
+
+            {% if page < total_pages %} <a href="/user/{{ user_id }}/sources?page={{ page + 1 }}"
+                class="pagination-btn">Next →</a>
+                {% else %}
+                <span class="pagination-btn disabled">Next →</span>
+                {% endif %}
+        </div>
+        {% endif %}
     </div>
 </body>
 
