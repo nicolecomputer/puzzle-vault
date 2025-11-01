@@ -3,11 +3,12 @@
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
+from src.config import settings
 from src.database import get_db
 from src.models.puzzle import Puzzle
 from src.models.source import Source
@@ -16,8 +17,22 @@ from src.models.user import User
 feed_router = APIRouter()
 
 
+def get_base_url(request: Request) -> str:
+    """Get the base URL for the application.
+
+    Uses BASE_URL from config if set, otherwise falls back to request URL.
+    """
+    if settings.BASE_URL:
+        return settings.BASE_URL.rstrip("/")
+
+    # Fall back to request scheme and host
+    return f"{request.url.scheme}://{request.url.netloc}"
+
+
 @feed_router.get("/feeds/{id}.json")
-async def get_feed(id: str, key: str, db: Session = Depends(get_db)) -> JSONResponse:
+async def get_feed(
+    id: str, key: str, request: Request, db: Session = Depends(get_db)
+) -> JSONResponse:
     """Return a JSON feed for the given ID and key.
 
     ID can be either a short_code or a UUID.

@@ -30,6 +30,10 @@ class Settings:
         os.getenv("DATA_PATH", Path(__file__).parent.parent / "data")
     )
 
+    # Base URL for the application (used for generating feed URLs)
+    # If not set, will auto-detect from request headers
+    BASE_URL: str | None = os.getenv("BASE_URL", None)
+
     def __init__(self) -> None:
         """Ensure directories exist."""
         self.DATA_PATH.mkdir(parents=True, exist_ok=True)
