@@ -27,7 +27,7 @@ async def home(request: Request) -> StarletteResponse:
     if request.session.get("logged_in"):
         # Redirect to user puzzles page if already logged in
         user_id = request.session.get("username", "user")
-        return RedirectResponse(url=f"/user/{user_id}/puzzles", status_code=303)
+        return RedirectResponse(url=f"/user/{user_id}/sources", status_code=303)
 
     templates = get_templates()
     return templates.TemplateResponse("index.html", {"request": request})
@@ -51,7 +51,7 @@ async def login(
         request.session["username"] = username
         request.session["user_id"] = user.id
         # Redirect to user puzzles page
-        return RedirectResponse(url=f"/user/{username}/puzzles", status_code=303)
+        return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
 
     # Invalid credentials - show login page with error
     templates = get_templates()
@@ -67,19 +67,19 @@ async def logout(request: Request) -> StarletteResponse:
     return RedirectResponse(url="/", status_code=303)
 
 
-@router.get("/user/{id}/puzzles", response_class=HTMLResponse)
+@router.get("/user/{id}/sources", response_class=HTMLResponse)
 @require_auth
-async def user_puzzles(
+async def user_sources(
     request: Request, id: str, db: Session = Depends(get_db)
 ) -> StarletteResponse:
-    """Display user's available puzzles."""
+    """Display user's available sources."""
     templates = get_templates()
     user_id = request.session.get("user_id")
 
     sources = db.query(Source).filter(Source.user_id == user_id).all()
 
     return templates.TemplateResponse(
-        "user_puzzles.html", {"request": request, "sources": sources}
+        "user_sources.html", {"request": request, "sources": sources}
     )
 
 
@@ -109,7 +109,7 @@ async def create_source(
     db.add(source)
     db.commit()
 
-    return RedirectResponse(url=f"/user/{username}/puzzles", status_code=303)
+    return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
 
 
 @router.get("/feeds/{id}.json")
@@ -121,12 +121,12 @@ async def get_feed(id: str, key: str) -> JSONResponse:
     return JSONResponse(content=feed_data)
 
 
-@router.get("/feeds/{id}", response_class=HTMLResponse)
+@router.get("/sources/{id}", response_class=HTMLResponse)
 @require_auth
-async def feed_detail(
+async def source_detail(
     request: Request, id: str, db: Session = Depends(get_db)
 ) -> StarletteResponse:
-    """Display feed information page."""
+    """Display source information page."""
     feed_key = "user_key"
 
     source = db.query(Source).filter(Source.id == id).first()
@@ -146,4 +146,4 @@ async def feed_detail(
     }
 
     templates = get_templates()
-    return templates.TemplateResponse("feed_detail.html", feed_data)
+    return templates.TemplateResponse("source_detail.html", feed_data)
