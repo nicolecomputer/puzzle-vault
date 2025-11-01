@@ -1,5 +1,6 @@
 """File processor for importing puzzles from imports/ directories."""
 
+import hashlib
 import json
 import logging
 import shutil
@@ -21,6 +22,15 @@ class FileProcessor:
 
     def __init__(self):
         self.data_dir = settings.puzzles_path
+
+    @staticmethod
+    def _calculate_file_hash(file_path: Path) -> str:
+        """Calculate SHA256 hash of a file."""
+        sha256_hash = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        return sha256_hash.hexdigest()
 
     def process_all(self):
         """Process all pending imports across all source directories."""
@@ -94,14 +104,36 @@ class FileProcessor:
         title = metadata.get("title") or puzzle_file.title or "Untitled"
         author = metadata.get("author") or puzzle_file.author
 
+        # Calculate file hash for duplicate detection
+        file_hash = self._calculate_file_hash(puz_file)
+
         db = SessionLocal()
         try:
+            # Check if puzzle already exists for this source with the same file hash
+            existing_puzzle = (
+                db.query(Puzzle)
+                .filter(
+                    Puzzle.source_id == source_id,
+                    Puzzle.file_hash == file_hash,
+                )
+                .first()
+            )
+
+            if existing_puzzle:
+                logger.info(
+                    f"Duplicate puzzle already exists (ID: {existing_puzzle.id}, hash: {file_hash[:8]}...), deleting import files"
+                )
+                puz_file.unlink()
+                meta_file.unlink()
+                return
+
             puzzle = Puzzle(
                 source_id=source_id,
                 title=title,
                 author=author,
                 puzzle_date=date.fromisoformat(puzzle_date),
                 file_path="",  # Will be set after moving the file
+                file_hash=file_hash,
             )
 
             db.add(puzzle)
