@@ -8,6 +8,7 @@ from pathlib import Path
 
 import puz
 
+from src.config import settings
 from src.database import SessionLocal
 from src.models.puzzle import Puzzle
 from src.models.source import Source
@@ -19,7 +20,7 @@ class FileProcessor:
     """Processes puzzle files from /data/puzzles/{source-id}/imports/."""
 
     def __init__(self):
-        self.data_dir = Path("/data/puzzles")
+        self.data_dir = settings.puzzles_path
 
     def process_all(self):
         """Process all pending imports across all source directories."""
@@ -45,7 +46,7 @@ class FileProcessor:
                     logger.warning(f"Unknown source folder: {folder_name}")
                     continue
 
-                imports_dir = source_dir / "imports"
+                imports_dir = source_dir / "import"
 
                 if not imports_dir.exists():
                     continue
