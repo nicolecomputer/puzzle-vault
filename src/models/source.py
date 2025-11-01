@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
@@ -43,3 +44,20 @@ class Source(Base):
     def folder_name(self) -> str:
         """Return short_code if available, otherwise UUID."""
         return self.short_code if self.short_code else self.id
+
+    def create_folders(self, base_path: Path) -> None:
+        """Create the folder structure for this source."""
+        source_path = base_path / self.folder_name
+        for subfolder in ["import", "puzzles", "errors"]:
+            folder_path = source_path / subfolder
+            folder_path.mkdir(parents=True, exist_ok=True)
+
+
+@event.listens_for(Source, "after_insert")
+def create_source_folders_on_insert(
+    mapper: object, connection: object, target: Source
+) -> None:
+    """Automatically create folder structure when a source is inserted."""
+    from src.config import settings
+
+    target.create_folders(settings.puzzles_path)
