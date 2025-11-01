@@ -4,7 +4,8 @@ This script is for development/testing only.
 Run with: pipenv run seed-data
 """
 from sqlalchemy.orm import Session
-from src.database import SessionLocal, DATABASE_PATH
+from src.database import SessionLocal
+from src.config import settings
 from src.models.user import User
 from src.auth import hash_password
 
@@ -41,9 +42,10 @@ def seed_users(db: Session) -> None:
 
 def main() -> None:
     """Seed the database with development data."""
-    print(f"Database: {DATABASE_PATH}\n")
+    db_path = settings.CONFIG_PATH / "puz-feed.db"
+    print(f"Database: {db_path}\n")
 
-    if not DATABASE_PATH.exists():
+    if not db_path.exists():
         print("❌ Database not found. Run migrations first:")
         print("   pipenv run migrate")
         return

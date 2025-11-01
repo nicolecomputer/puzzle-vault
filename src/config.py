@@ -24,11 +24,25 @@ class Settings:
     # Config path for database and other files
     CONFIG_PATH: Path = Path(os.getenv("CONFIG_PATH", Path(__file__).parent.parent / "config"))
 
+    # Data path for puzzle files
+    DATA_PATH: Path = Path(os.getenv("DATA_PATH", Path(__file__).parent.parent / "data"))
+
+    def __init__(self) -> None:
+        """Ensure directories exist."""
+        self.CONFIG_PATH.mkdir(parents=True, exist_ok=True)
+        self.DATA_PATH.mkdir(parents=True, exist_ok=True)
+        self.puzzles_path.mkdir(parents=True, exist_ok=True)
+
     @property
     def database_url(self) -> str:
         """Get the database URL."""
         db_path = self.CONFIG_PATH / "puz-feed.db"
         return f"sqlite:///{db_path}"
+
+    @property
+    def puzzles_path(self) -> Path:
+        """Get the puzzles directory path."""
+        return self.DATA_PATH / "puzzles"
 
 
 # Global settings instance
