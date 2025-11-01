@@ -60,3 +60,91 @@
 .copy-btn:active {
     background-color: #1e3a8a;
 }
+
+/* Puzzles list section */
+.puzzles-section {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2rem;
+}
+
+.puzzles-section th {
+    background-color: #e2e8f0;
+    color: #1e293b;
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 1rem;
+    border: 1px solid #cbd5e1;
+}
+
+.puzzles-section th[colspan="5"] {
+    text-align: center;
+}
+
+.puzzles-header th {
+    background-color: #cbd5e1;
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+}
+
+.puzzles-section td {
+    background-color: #f8fafc;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    font-size: 0.875rem;
+}
+
+.puzzles-section tr:nth-child(even) td {
+    background-color: #ffffff;
+}
+
+.puzzles-section tr:hover td {
+    background-color: #e0f2fe;
+}
+
+.no-puzzles {
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+}
+
+.download-btn {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.download-btn:hover {
+    background-color: #1e40af;
+}
+
+.download-btn:active {
+    background-color: #1e3a8a;
+}
+
+.puzzles-section td:first-child,
+.puzzles-section th:first-child {
+    white-space: nowrap;
+}
+
+.puzzles-section td:last-child,
+.puzzles-section th:last-child {
+    width: 1%;
+    white-space: nowrap;
+}
+
+/* Responsive: Hide title and author on small screens */
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none;
+    }
+}

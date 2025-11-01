@@ -16,7 +16,8 @@
         <table class="info-table">
             <tr>
                 <th>Latest Puzzle Date</th>
-                <td>{{ latest_puzzle_date }}</td>
+                <td>{% if latest_puzzle_date != 'N/A' %}{{ latest_puzzle_date.strftime('%B %d, %Y') }}{% else %}N/A{%
+                    endif %}</td>
             </tr>
             <tr>
                 <th>Total Puzzles</th>
@@ -34,7 +35,7 @@
 
         <table class="link-section">
             <tr>
-                <th>Feed JSON</th>
+                <th>Puzzlecast Feed</th>
             </tr>
             <tr>
                 <td>
@@ -44,6 +45,35 @@
                     </div>
                 </td>
             </tr>
+        </table>
+
+        <table class="puzzles-section">
+            <tr>
+                <th colspan="4">Puzzles</th>
+            </tr>
+            <tr class="puzzles-header">
+                <th>Date</th>
+                <th class="hide-mobile">Title</th>
+                <th class="hide-mobile">Author</th>
+                <th>Download</th>
+            </tr>
+            {% if puzzles %}
+            {% for puzzle in puzzles %}
+            <tr>
+                <td>{% if puzzle.puzzle_date %}{{ puzzle.puzzle_date.strftime('%b %d, %Y') }}{% else %}N/A{% endif %}
+                </td>
+                <td class="hide-mobile">{{ puzzle.title }}</td>
+                <td class="hide-mobile">{{ puzzle.author or 'Unknown' }}</td>
+                <td>
+                    <button class="download-btn" onclick="downloadPuzzle('{{ puzzle.id }}')">Download</button>
+                </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="4" class="no-puzzles">No puzzles found</td>
+            </tr>
+            {% endif %}
         </table>
     </div>
 
@@ -59,6 +89,10 @@
                     btn.textContent = originalText;
                 }, 2000);
             });
+        }
+
+        function downloadPuzzle(puzzleId) {
+            window.location.href = `/puzzles/${puzzleId}/download`;
         }
     </script>
 </body>

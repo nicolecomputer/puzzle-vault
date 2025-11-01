@@ -101,7 +101,7 @@ class FileProcessor:
                 title=title,
                 author=author,
                 puzzle_date=date.fromisoformat(puzzle_date),
-                file_path=str(puz_file),
+                file_path="",  # Will be set after moving the file
             )
 
             db.add(puzzle)
@@ -110,14 +110,20 @@ class FileProcessor:
 
             logger.info(f"Created puzzle {puzzle.id}: {title} ({puzzle_date})")
 
-            self._move_to_puzzles(folder_name, puz_file, meta_file, puzzle.id)
+            final_path = self._move_to_puzzles(
+                folder_name, puz_file, meta_file, puzzle.id
+            )
+
+            # Update the puzzle with the final file path
+            puzzle.file_path = str(final_path)
+            db.commit()
 
         finally:
             db.close()
 
     def _move_to_puzzles(
         self, folder_name: str, puz_file: Path, meta_file: Path, puzzle_id: str
-    ):
+    ) -> Path:
         """Move successfully processed files to puzzles/ directory."""
         puzzles_dir = self.data_dir / folder_name / "puzzles"
         puzzles_dir.mkdir(parents=True, exist_ok=True)
@@ -129,6 +135,8 @@ class FileProcessor:
         shutil.move(str(meta_file), str(dest_meta))
 
         logger.info(f"Moved files to {puzzles_dir}")
+
+        return dest_puz
 
     def _move_to_errors(
         self, folder_name: str, puz_file: Path, meta_file: Path, error_msg: str

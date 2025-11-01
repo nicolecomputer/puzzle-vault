@@ -1,13 +1,16 @@
 """Route handlers for the puz-feed application."""
 
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
 from src.auth import require_auth, verify_password
 from src.database import get_db
+from src.models.puzzle import Puzzle
 from src.models.source import Source
 from src.models.user import User
 
@@ -139,17 +142,49 @@ async def source_detail(
 
     if source:
         source_name = source.name
+        total_puzzles = len(source.puzzles)
+        puzzles = sorted(
+            source.puzzles, key=lambda p: p.puzzle_date or p.created_at, reverse=True
+        )
+        latest_puzzle_date = puzzles[0].puzzle_date if puzzles else None
     else:
         source_name = "Unknown"
+        total_puzzles = 0
+        puzzles = []
+        latest_puzzle_date = None
 
     feed_data = {
         "request": request,
         "source_title": source_name,
-        "latest_puzzle_date": "N/A",
-        "total_puzzles": 0,
+        "latest_puzzle_date": latest_puzzle_date or "N/A",
+        "total_puzzles": total_puzzles,
         "errors": 0,
         "feed_url": f"/feeds/{id}.json?key={feed_key}",
+        "puzzles": puzzles,
+        "source_id": id,
     }
 
     templates = get_templates()
     return templates.TemplateResponse("source_detail.html", feed_data)
+
+
+@router.get("/puzzles/{puzzle_id}/download", response_class=FileResponse)
+@require_auth
+async def download_puzzle(
+    puzzle_id: str, db: Session = Depends(get_db)
+) -> StarletteResponse:
+    """Download a puzzle file."""
+    puzzle = db.query(Puzzle).filter(Puzzle.id == puzzle_id).first()
+
+    if not puzzle:
+        return JSONResponse({"error": "Puzzle not found"}, status_code=404)
+
+    file_path = Path(puzzle.file_path)
+    if not file_path.exists():
+        return JSONResponse({"error": "Puzzle file not found"}, status_code=404)
+
+    return FileResponse(
+        path=file_path,
+        filename=f"{puzzle.title}.puz",
+        media_type="application/x-crossword",
+    )
