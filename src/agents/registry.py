@@ -15,6 +15,7 @@ class AgentPreset(TypedDict):
     id: str
     name: str
     short_code: str
+    timezone: str | None
     config: dict[str, Any]
 
 

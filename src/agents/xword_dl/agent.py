@@ -2,7 +2,8 @@
 
 import json
 import logging
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import xword_dl  # type: ignore[import]
 
@@ -41,12 +42,18 @@ class XwordDlAgent(BaseAgent):
         puzzles_found = 0
         errors = []
 
-        # Fetch puzzles for the last N days
-        end_date = date.today()
+        # Determine timezone for date calculations
+        # If source has timezone, use it; otherwise use system local time
+        tz = ZoneInfo(source.timezone) if source.timezone else None
+        now = datetime.now(tz=tz)
+
+        # Fetch puzzles for the last N days (in the source's timezone)
+        end_date = now.date()
         start_date = end_date - timedelta(days=config.days_to_fetch - 1)
 
         logger.info(
             f"Fetching {config.days_to_fetch} day(s) of puzzles from {start_date} to {end_date}"
+            + (f" (timezone: {source.timezone})" if source.timezone else "")
         )
 
         current_date = start_date

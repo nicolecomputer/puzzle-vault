@@ -158,6 +158,7 @@ async def create_source(
     request: Request,
     name: str = Form(...),
     short_code: str | None = Form(None),
+    timezone: str | None = Form(None),
     agent_type: str | None = Form(None),
     agent_config: str | None = Form(None),
     agent_enabled: bool = Form(True),
@@ -169,13 +170,15 @@ async def create_source(
 
     normalized_short_code = normalize_short_code(short_code)
 
-    # Convert empty string to None for agent_type
+    # Convert empty string to None for agent_type and timezone
     final_agent_type = agent_type if agent_type else None
+    final_timezone = timezone if timezone else None
 
     source = Source(
         name=name,
         user_id=user.id,
         short_code=normalized_short_code,
+        timezone=final_timezone,
         agent_type=final_agent_type,
         agent_config=agent_config,
         agent_enabled=agent_enabled,

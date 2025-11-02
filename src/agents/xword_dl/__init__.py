@@ -33,6 +33,7 @@ AGENT_INFO = AgentInfo(
             "id": "usa",
             "name": "USA Today",
             "short_code": "usa",
+            "timezone": "America/New_York",
             "config": {
                 "outlet_keyword": "usa",
                 "days_to_fetch": 1,
@@ -44,6 +45,7 @@ AGENT_INFO = AgentInfo(
             "id": "atl",
             "name": "Atlantic",
             "short_code": "atl",
+            "timezone": "America/New_York",
             "config": {
                 "outlet_keyword": "atl",
                 "days_to_fetch": 1,
@@ -55,6 +57,7 @@ AGENT_INFO = AgentInfo(
             "id": "pzm",
             "name": "Puzzmo",
             "short_code": "pzm",
+            "timezone": "America/Los_Angeles",
             "config": {
                 "outlet_keyword": "pzm",
                 "days_to_fetch": 1,
