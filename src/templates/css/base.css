@@ -195,3 +195,89 @@ h1 {
     min-width: 120px;
     text-align: center;
 }
+
+/* Form Components */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--color-text-dark);
+    font-size: var(--font-size-sm);
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    background-color: var(--color-bg-container);
+    color: var(--color-text-dark);
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus {
+    outline: none;
+    border-color: var(--color-primary-active);
+    box-shadow: 0 0 0 3px light-dark(rgba(30, 58, 138, 0.1), rgba(191, 219, 254, 0.1));
+}
+
+.form-group small {
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-xs);
+}
+
+.btn-submit {
+    padding: var(--spacing-md);
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.btn-submit:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.btn-submit:active {
+    background-color: var(--color-primary-active);
+}
+
+.btn-cancel {
+    padding: var(--spacing-md);
+    background-color: var(--color-bg-light);
+    color: var(--color-text-medium);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    text-decoration: none;
+    text-align: center;
+    display: inline-block;
+}
+
+.btn-cancel:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.error-message {
+    background-color: light-dark(#fee2e2, #7f1d1d);
+    color: light-dark(#991b1b, #fecaca);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: var(--font-size-sm);
+    border: 1px solid light-dark(#fecaca, #991b1b);
+}
