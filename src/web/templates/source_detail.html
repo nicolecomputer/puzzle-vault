@@ -17,7 +17,8 @@
             <form action="/agents/run" method="POST" style="margin: 0;">
                 <input type="hidden" name="source_id" value="{{ source_id }}">
                 <input type="hidden" name="return_url" value="/sources/{{ source_id }}">
-                <button type="submit" class="add-puzzle-btn">Check for Update</button>
+                <button type="submit" class="add-puzzle-btn" {% if has_running_agent %}disabled{% endif %}>Check for
+                    Update</button>
             </form>
         </div>
 

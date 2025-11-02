@@ -371,6 +371,13 @@ async def source_detail(
         .first()
     )
 
+    # Check if there's a running or pending agent task
+    has_running_agent = (
+        db.query(AgentTask)
+        .filter(AgentTask.source_id == id, AgentTask.status.in_(["pending", "running"]))
+        .first()
+    ) is not None
+
     templates = get_templates()
     return templates.TemplateResponse(
         "source_detail.html",
@@ -390,6 +397,7 @@ async def source_detail(
             "schedule_enabled": source.schedule_enabled,
             "schedule_interval_hours": source.schedule_interval_hours,
             "next_run_at": source.next_run_at,
+            "has_running_agent": has_running_agent,
         },
     )
 
