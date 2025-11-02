@@ -53,15 +53,14 @@
             <tr class="clickable-row" onclick="window.location='/agents/runs/{{ run.id }}'">
                 <td>
                     <a href="/agents/runs/{{ run.id }}">
-                        {% if run.queued_at %}{{ run.queued_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif %}
+                        {{ run.queued_at | format_datetime('%b %d, %Y %I:%M %p') }}
                     </a>
                 </td>
                 <td class="hide-mobile">
-                    {% if run.started_at %}{{ run.started_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif %}
+                    {{ run.started_at | format_datetime('%b %d, %Y %I:%M %p') }}
                 </td>
                 <td class="hide-mobile">
-                    {% if run.completed_at %}{{ run.completed_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif
-                    %}
+                    {{ run.completed_at | format_datetime('%b %d, %Y %I:%M %p') }}
                 </td>
                 <td>
                     <span class="badge badge-{{ run.status }}">

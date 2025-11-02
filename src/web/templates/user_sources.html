@@ -29,7 +29,7 @@
                 </div>
                 <div class="source-info">
                     <div class="source-name">{{ source.name }}</div>
-                    <div class="source-updated">Updated {{ source.updated_at.strftime('%B %d, %Y') }}</div>
+                    <div class="source-updated">Updated {{ source.updated_at | format_datetime('%B %d, %Y') }}</div>
                 </div>
                 <div class="source-arrow">→</div>
             </a>

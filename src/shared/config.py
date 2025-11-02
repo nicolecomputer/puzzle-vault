@@ -82,6 +82,10 @@ class Settings:
     # This is set from the DATA_PATH environment variable only
     DATA_PATH: Path = DATA_PATH
 
+    # Timezone for displaying dates (default: America/New_York)
+    # This is set from the TZ environment variable only
+    TZ_TIMEZONE: str = os.getenv("TZ", "America/New_York")
+
     def __init__(self) -> None:
         """Ensure directories exist."""
         self.config_path.mkdir(parents=True, exist_ok=True)

@@ -32,8 +32,7 @@
                 <td>
                     {% if latest_run %}
                     <a href="/agents/runs/{{ latest_run.id }}">
-                        {% if latest_run.queued_at %}{{ latest_run.queued_at.strftime('%b %d, %Y %I:%M %p') }}{% else
-                        %}N/A{% endif %}
+                        {{ latest_run.queued_at | format_datetime('%b %d, %Y %I:%M %p') }}
                     </a>
                     <span class="badge badge-{{ latest_run.status }}" style="margin-left: 8px;">
                         {{ latest_run.status }}

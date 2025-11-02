@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -27,10 +28,21 @@ templates.env.globals["cache_buster"] = CACHE_BUSTER
 def format_datetime(
     dt: datetime | None, format_str: str = "%b %d, %Y %I:%M:%S %p"
 ) -> str:
-    """Format datetime with timezone awareness."""
+    """Format datetime with timezone awareness, converting to user's timezone."""
     if dt is None:
         return "N/A"
-    return dt.strftime(format_str)
+
+    # Get the user's timezone from settings
+    user_tz = ZoneInfo(settings.TZ_TIMEZONE)
+
+    # If datetime is naive (no timezone info), assume UTC
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=ZoneInfo("UTC"))
+
+    # Convert to user's timezone
+    dt_user_tz = dt.astimezone(user_tz)
+
+    return dt_user_tz.strftime(format_str)
 
 
 templates.env.filters["format_datetime"] = format_datetime
