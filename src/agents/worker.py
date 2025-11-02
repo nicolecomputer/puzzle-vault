@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from src.agents.agent_logger import AgentLogger, AgentLogHandler
 from src.agents.registry import get_agent_class
+from src.agents.scheduler import AgentScheduler
 from src.shared.config import settings
 from src.shared.database import SessionLocal
 from src.shared.models.agent_task import AgentTask
@@ -139,28 +140,35 @@ async def worker_loop() -> None:
     finally:
         db.close()
 
-    while True:
-        db = SessionLocal()
-        try:
-            stmt = (
-                select(AgentTask)
-                .where(AgentTask.status == "pending")
-                .order_by(AgentTask.queued_at)
-                .limit(1)
-            )
-            result = db.execute(stmt)
-            task = result.scalar_one_or_none()
+    # Start the scheduler
+    scheduler = AgentScheduler(check_interval=60)
+    scheduler.start()
 
-            if task:
-                await process_task(task, db)
-            else:
+    try:
+        while True:
+            db = SessionLocal()
+            try:
+                stmt = (
+                    select(AgentTask)
+                    .where(AgentTask.status == "pending")
+                    .order_by(AgentTask.queued_at)
+                    .limit(1)
+                )
+                result = db.execute(stmt)
+                task = result.scalar_one_or_none()
+
+                if task:
+                    await process_task(task, db)
+                else:
+                    await asyncio.sleep(5)
+
+            except Exception:
+                logger.exception("Error in worker loop")
                 await asyncio.sleep(5)
-
-        except Exception:
-            logger.exception("Error in worker loop")
-            await asyncio.sleep(5)
-        finally:
-            db.close()
+            finally:
+                db.close()
+    finally:
+        scheduler.stop()
 
 
 def main() -> None:

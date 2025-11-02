@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import shutil
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -35,6 +35,11 @@ class Source(Base):
     agent_type: Mapped[str | None] = mapped_column(String, nullable=True)
     agent_config: Mapped[str | None] = mapped_column(String, nullable=True)
     agent_enabled: Mapped[bool] = mapped_column(default=False)
+    schedule_enabled: Mapped[bool] = mapped_column(default=False)
+    schedule_interval_hours: Mapped[int | None] = mapped_column(nullable=True)
+    last_scheduled_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -49,6 +54,20 @@ class Source(Base):
     def folder_name(self) -> str:
         """Return short_code if available, otherwise UUID."""
         return self.short_code if self.short_code else self.id
+
+    @property
+    def next_run_at(self) -> datetime | None:
+        """Calculate next scheduled run time."""
+        if not self.schedule_enabled or not self.schedule_interval_hours:
+            return None
+
+        # If never run, next run is now (will be picked up by scheduler)
+        if not self.last_scheduled_run_at:
+            return datetime.utcnow()
+
+        return self.last_scheduled_run_at + timedelta(
+            hours=self.schedule_interval_hours
+        )
 
     @property
     def has_icon(self) -> bool:

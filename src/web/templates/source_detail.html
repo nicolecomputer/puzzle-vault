@@ -42,6 +42,13 @@
                     {% endif %}
                 </td>
             </tr>
+            {% if schedule_enabled and schedule_interval_hours %}
+            <tr>
+                <th>Next Scheduled Check</th>
+                <td>{{ next_run_at | format_datetime('%I:%M %p') if next_run_at else 'N/A' }} ({{ next_run_at | time_ago
+                    if next_run_at else 'N/A' }})</td>
+            </tr>
+            {% endif %}
         </table>
 
         <table class="link-section">

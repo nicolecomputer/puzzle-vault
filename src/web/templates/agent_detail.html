@@ -33,6 +33,24 @@
                 </td>
             </tr>
             <tr>
+                <th>Schedule Enabled</th>
+                <td>
+                    <span class="badge {% if schedule_enabled %}badge-success{% else %}badge-error{% endif %}">
+                        {{ 'Yes' if schedule_enabled else 'No' }}
+                    </span>
+                </td>
+            </tr>
+            {% if schedule_enabled and schedule_interval_hours %}
+            <tr>
+                <th>Last check for new puzzles</th>
+                <td>{{ last_scheduled_run_at | time_ago if last_scheduled_run_at else 'Never' }}</td>
+            </tr>
+            <tr>
+                <th>Next check for new puzzles</th>
+                <td>{{ next_run_at | time_ago if next_run_at else 'N/A' }}</td>
+            </tr>
+            {% endif %}
+            <tr>
                 <th>Total Runs</th>
                 <td>{{ total_runs }}</td>
             </tr>

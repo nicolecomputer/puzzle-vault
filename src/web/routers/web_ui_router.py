@@ -230,6 +230,8 @@ async def create_source(
     agent_type: str | None = Form(None),
     agent_config: str | None = Form(None),
     agent_enabled: bool = Form(True),
+    schedule_enabled: bool = Form(False),
+    schedule_interval_hours: int | None = Form(None),
     db: Session = Depends(get_db),
 ) -> StarletteResponse:
     """Create a new source and redirect to sources page."""
@@ -242,6 +244,13 @@ async def create_source(
     final_agent_type = agent_type if agent_type else None
     final_timezone = timezone if timezone else None
 
+    # Auto-enable 3-hour schedule for preset agents
+    final_schedule_enabled = schedule_enabled
+    final_schedule_interval_hours = schedule_interval_hours
+    if final_agent_type and not schedule_interval_hours:
+        final_schedule_enabled = True
+        final_schedule_interval_hours = 3
+
     source = Source(
         name=name,
         user_id=user.id,
@@ -250,9 +259,23 @@ async def create_source(
         agent_type=final_agent_type,
         agent_config=agent_config,
         agent_enabled=agent_enabled,
+        schedule_enabled=final_schedule_enabled,
+        schedule_interval_hours=final_schedule_interval_hours,
     )
     db.add(source)
     db.commit()
+    db.refresh(source)
+
+    # If scheduling is enabled, queue an immediate first run
+    if final_schedule_enabled and final_agent_type and agent_enabled:
+        from datetime import datetime
+
+        from src.shared.models.agent_task import AgentTask
+
+        task = AgentTask(source_id=source.id, status="pending")
+        db.add(task)
+        source.last_scheduled_run_at = datetime.utcnow()
+        db.commit()
 
     return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
 
@@ -299,6 +322,9 @@ async def source_detail(
             "page": validated_page,
             "total_pages": total_pages,
             "latest_run": latest_run,
+            "schedule_enabled": source.schedule_enabled,
+            "schedule_interval_hours": source.schedule_interval_hours,
+            "next_run_at": source.next_run_at,
         },
     )
 
@@ -345,6 +371,10 @@ async def agent_detail(
             "source_title": source.name,
             "agent_type": source.agent_type,
             "agent_enabled": source.agent_enabled,
+            "schedule_enabled": source.schedule_enabled,
+            "schedule_interval_hours": source.schedule_interval_hours,
+            "last_scheduled_run_at": source.last_scheduled_run_at,
+            "next_run_at": source.next_run_at,
             "total_runs": len(all_runs),
             "runs": runs_with_duration,
             "source_id": id,
