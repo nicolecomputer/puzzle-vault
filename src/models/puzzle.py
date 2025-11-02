@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, DateTime, ForeignKey, String, UniqueConstraint
@@ -40,3 +41,20 @@ class Puzzle(Base):
     )
 
     source: Mapped[Source] = relationship("Source", back_populates="puzzles")
+
+    def preview_path(self) -> Path:
+        """Get the path to the preview image for this puzzle.
+
+        Returns:
+            Path to the preview image file
+        """
+        puz_path = Path(self.file_path)
+        return puz_path.parent / f"{self.id}.preview.png"
+
+    def has_preview(self) -> bool:
+        """Check if a preview image exists for this puzzle.
+
+        Returns:
+            True if preview image exists, False otherwise
+        """
+        return self.preview_path().exists()

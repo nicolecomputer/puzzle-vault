@@ -32,6 +32,14 @@
         <div style="margin-top: 2rem; text-align: center;">
             <button class="btn btn-primary" onclick="downloadPuzzle()">Download Puzzle</button>
         </div>
+
+        {% if puzzle.has_preview() %}
+        <div style="margin-top: 2rem; text-align: center;">
+            <img src="/puzzles/{{ puzzle.id }}.preview.png" alt="Preview of {{ puzzle.title }}"
+                style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        {% endif %}
+
     </div>
 
     <script>

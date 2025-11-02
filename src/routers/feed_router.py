@@ -72,6 +72,26 @@ async def get_feed(
     return JSONResponse(content=feed_data)
 
 
+@feed_router.get("/puzzles/{puzzle_id}.preview.png", response_class=FileResponse)
+async def get_puzzle_preview(
+    puzzle_id: str, db: Session = Depends(get_db)
+) -> StarletteResponse:
+    """Get puzzle preview image (public, no authentication required)."""
+    puzzle = db.query(Puzzle).filter(Puzzle.id == puzzle_id).first()
+    if not puzzle:
+        raise HTTPException(status_code=404, detail="Puzzle not found")
+
+    preview_path = puzzle.preview_path()
+    if not preview_path.exists():
+        raise HTTPException(status_code=404, detail="Preview image not found")
+
+    return FileResponse(
+        path=preview_path,
+        media_type="image/png",
+        headers={"Content-Disposition": "inline"},
+    )
+
+
 @feed_router.get("/puzzles/{puzzle_id}.puz", response_class=FileResponse)
 async def download_puzzle_by_key(
     puzzle_id: str,

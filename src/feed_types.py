@@ -20,7 +20,7 @@ class PuzzleCastItem(TypedDict, total=False):
     """A single item in a Puzzlecast feed.
 
     Required fields: id, url, title, content_text, attachments
-    Optional fields: authors, date_published
+    Optional fields: authors, date_published, image
     """
 
     id: str
@@ -29,6 +29,7 @@ class PuzzleCastItem(TypedDict, total=False):
     content_text: str
     authors: list[PuzzleCastAuthor]
     date_published: str
+    image: str
     attachments: list[PuzzleCastAttachment]
 
 

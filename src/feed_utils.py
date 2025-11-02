@@ -89,6 +89,9 @@ def build_feed_item(puzzle: Puzzle, base_url: str, feed_key: str) -> PuzzleCastI
     if puzzle.puzzle_date:
         item["date_published"] = f"{puzzle.puzzle_date.isoformat()}T00:00:00Z"
 
+    if puzzle.has_preview():
+        item["image"] = f"{base_url}/puzzles/{puzzle.id}.preview.png"
+
     return item
 
 
