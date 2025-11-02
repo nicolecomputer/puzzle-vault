@@ -12,29 +12,33 @@
 <body>
     <div class="container">
         <div class="page-header">
-            <h1>My Puzzles</h1>
+            <h1>Puzzles</h1>
             <a href="/sources/new" class="add-puzzle-btn">+</a>
         </div>
 
-        <div class="puzzles-grid">
+        <div class="sources-list">
+            {% if sources %}
             {% for source in sources %}
-            <div class="puzzle-card">
-                <h2>{{ source.name }}</h2>
-                <div class="puzzle-info">
-                    <div class="puzzle-info-row">
-                        <span class="puzzle-info-label">Errors</span>
-                        <span class="puzzle-info-value">
-                            <span class="badge badge-success">
-                                0
-                            </span>
-                        </span>
-                    </div>
+            <a href="/sources/{{ source.id }}" class="source-item">
+                <div class="source-icon">
+                    {% if source.has_icon %}
+                    <img src="/sources/{{ source.folder_name }}/icon.png" alt="{{ source.name }} icon">
+                    {% else %}
+                    <div class="source-icon-placeholder">{{ source.name[0].upper() }}</div>
+                    {% endif %}
                 </div>
-                <div class="puzzle-actions">
-                    <a href="/sources/{{ source.id }}" class="view-feed-btn">View Feed</a>
+                <div class="source-info">
+                    <div class="source-name">{{ source.name }}</div>
+                    <div class="source-updated">Updated {{ source.updated_at.strftime('%B %d, %Y') }}</div>
                 </div>
-            </div>
+                <div class="source-arrow">→</div>
+            </a>
             {% endfor %}
+            {% else %}
+            <div class="no-sources">
+                <p>No sources yet. Click the + button to add your first source.</p>
+            </div>
+            {% endif %}
         </div>
 
         {% if total_pages > 1 %}

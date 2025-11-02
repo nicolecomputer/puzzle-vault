@@ -34,7 +34,93 @@ a.add-puzzle-btn:hover {
     background-color: var(--color-primary-hover);
 }
 
-/* Puzzles Grid */
+/* Sources List */
+.sources-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.source-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background-color: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: background-color var(--transition-fast);
+}
+
+.source-item:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.source-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.source-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.source-icon-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-primary);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.source-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.source-name {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: var(--spacing-xs);
+}
+
+.source-updated {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+}
+
+.source-arrow {
+    flex-shrink: 0;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-light);
+}
+
+.no-sources {
+    padding: var(--spacing-3xl);
+    text-align: center;
+    color: var(--color-text-light);
+    background-color: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.no-sources p {
+    margin: 0;
+    font-size: var(--font-size-base);
+}
+
+/* Puzzles Grid (Legacy) */
 .puzzles-grid {
     display: grid;
     gap: var(--spacing-xl);

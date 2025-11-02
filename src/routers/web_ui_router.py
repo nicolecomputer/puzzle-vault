@@ -81,11 +81,17 @@ async def user_sources(
     """Display user's available sources."""
     user = get_user_from_session(request, db)
 
-    query = db.query(Source).filter(Source.user_id == user.id)
+    query = (
+        db.query(Source)
+        .filter(Source.user_id == user.id)
+        .order_by(Source.updated_at.desc())
+    )
     all_sources = query.all()
 
     per_page = 30
     sources, total_pages, validated_page = paginate(all_sources, page, per_page)
+
+    base_url = str(request.base_url).rstrip("/")
 
     templates = get_templates()
     return templates.TemplateResponse(
@@ -96,6 +102,7 @@ async def user_sources(
             "page": validated_page,
             "total_pages": total_pages,
             "user_id": id,
+            "base_url": base_url,
         },
     )
 
