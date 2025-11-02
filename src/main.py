@@ -6,8 +6,8 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.config import settings
-from src.feed_router import feed_router
-from src.web_ui_router import web_ui_router
+from src.routers.feed_router import feed_router
+from src.routers.web_ui_router import web_ui_router
 
 app = FastAPI()
 
