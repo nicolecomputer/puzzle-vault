@@ -9,6 +9,16 @@ applyTo: '**'
 - Always use the cache buster query parameter when linking to CSS files in HTML templates
 - All commands should be run through make
 
+
+## Testing
+- Only write tests if explicitly asked to. Offer to write tests but do not write them unless requested
+- Tests should test edge cases and the general idea but shoudl not be exhaustive
+- Tests are only required for complex logic and are usually not needed
+- After iterating on code, run `make test` to ensure tests pass
+- Only write tests for functions that are data in data out
+- Tests live next to files so thing.py and thing_test.py
+- Use bdd style tests
+
 ## Code Organization Principles
 
 - Prefer small functions with clear "data in, data out" patterns

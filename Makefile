@@ -27,7 +27,10 @@ db-reset:
 	uv run python -m scripts.seed_data
 
 test:
-	uv run pytest
+	uv run pytest -v
+
+test-watch:
+	uv run pytest -v --testmon -f
 
 format:
 	uv run ruff format .
