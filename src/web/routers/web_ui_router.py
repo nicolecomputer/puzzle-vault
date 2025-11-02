@@ -15,7 +15,13 @@ from src.shared.models.puzzle import Puzzle
 from src.shared.models.source import Source
 from src.shared.models.user import User
 from src.shared.request_utils import get_base_url
-from src.web.auth import get_user_from_session, require_auth, verify_password
+from src.web.auth import (
+    get_user_from_session,
+    has_any_users,
+    hash_password,
+    require_auth,
+    verify_password,
+)
 from src.web.feed_utils import paginate_items, sort_puzzles_by_date
 from src.web.pagination_utils import paginate
 from src.web.source_utils import normalize_short_code
@@ -62,12 +68,17 @@ async def list_user_short_codes(
 
 
 @web_ui_router.get("/", response_class=HTMLResponse)
-async def home(request: Request) -> StarletteResponse:
+async def home(request: Request, db: Session = Depends(get_db)) -> StarletteResponse:
     """Serve the login page or redirect if already logged in."""
     if request.session.get("logged_in"):
         # Redirect to user puzzles page if already logged in
         user_id = request.session.get("username", "user")
         return RedirectResponse(url=f"/user/{user_id}/sources", status_code=303)
+
+    # Check if any users exist
+    if not has_any_users(db):
+        # No users exist, redirect to user creation
+        return RedirectResponse(url="/users/new", status_code=303)
 
     templates = get_templates()
     return templates.TemplateResponse("index.html", {"request": request})
@@ -105,6 +116,63 @@ async def logout(request: Request) -> StarletteResponse:
     """Log out the user and redirect to login page."""
     request.session.clear()
     return RedirectResponse(url="/", status_code=303)
+
+
+@web_ui_router.get("/users/new", response_class=HTMLResponse)
+async def new_user_form(
+    request: Request, db: Session = Depends(get_db)
+) -> StarletteResponse:
+    """Display form to create the first user."""
+    if has_any_users(db):
+        return RedirectResponse(url="/", status_code=303)
+
+    templates = get_templates()
+    return templates.TemplateResponse("new_user.html", {"request": request})
+
+
+@web_ui_router.post("/users", response_class=HTMLResponse)
+async def create_user(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+    db: Session = Depends(get_db),
+) -> StarletteResponse:
+    """Handle user creation (only if no users exist)."""
+    if has_any_users(db):
+        return RedirectResponse(url="/", status_code=303)
+
+    if password != confirm_password:
+        templates = get_templates()
+        return templates.TemplateResponse(
+            "new_user.html", {"request": request, "error": "Passwords do not match"}
+        )
+
+    if len(password) < 6:
+        templates = get_templates()
+        return templates.TemplateResponse(
+            "new_user.html",
+            {"request": request, "error": "Password must be at least 6 characters"},
+        )
+
+    existing_user = db.query(User).filter(User.username == username).first()
+    if existing_user:
+        templates = get_templates()
+        return templates.TemplateResponse(
+            "new_user.html",
+            {"request": request, "error": "Username already exists"},
+        )
+
+    new_user = User(username=username, password_hash=hash_password(password))
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    request.session["logged_in"] = True
+    request.session["username"] = username
+    request.session["user_id"] = new_user.id
+
+    return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
 
 
 @web_ui_router.get("/user/{id}/sources", response_class=HTMLResponse)

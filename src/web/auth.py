@@ -160,3 +160,15 @@ def get_user_from_session(request: Request, db: Session) -> User:
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
+
+
+def has_any_users(db: Session) -> bool:
+    """Check if any users exist in the database.
+
+    Args:
+        db: Database session
+
+    Returns:
+        True if at least one user exists, False otherwise
+    """
+    return db.query(User).first() is not None
