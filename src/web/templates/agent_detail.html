@@ -43,22 +43,18 @@
                 <th colspan="5">Agent Runs</th>
             </tr>
             <tr class="runs-header">
-                <th>Status</th>
-                <th>Queued</th>
+                <th>Queued + Run</th>
                 <th class="hide-mobile">Started</th>
                 <th class="hide-mobile">Completed</th>
-                <th class="hide-mobile">Duration</th>
+                <th>Status</th>
             </tr>
             {% if runs %}
             {% for run in runs %}
-            <tr>
+            <tr class="clickable-row" onclick="window.location='/agents/runs/{{ run.id }}'">
                 <td>
-                    <span class="badge badge-{{ run.status }}">
-                        {{ run.status }}
-                    </span>
-                </td>
-                <td>
-                    {% if run.queued_at %}{{ run.queued_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif %}
+                    <a href="/agents/runs/{{ run.id }}" style="text-decoration: none; color: inherit;">
+                        {% if run.queued_at %}{{ run.queued_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif %}
+                    </a>
                 </td>
                 <td class="hide-mobile">
                     {% if run.started_at %}{{ run.started_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif %}
@@ -67,14 +63,16 @@
                     {% if run.completed_at %}{{ run.completed_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif
                     %}
                 </td>
-                <td class="hide-mobile">
-                    {% if run.duration %}{{ run.duration }}{% else %}N/A{% endif %}
+                <td>
+                    <span class="badge badge-{{ run.status }}">
+                        {{ run.status }}
+                    </span>
                 </td>
             </tr>
             {% endfor %}
             {% else %}
             <tr>
-                <td colspan="5" class="no-runs">No agent runs found</td>
+                <td colspan="4" class="no-runs">No agent runs found</td>
             </tr>
             {% endif %}
         </table>

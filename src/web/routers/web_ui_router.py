@@ -281,6 +281,59 @@ async def enqueue_agent_run(
     return RedirectResponse(url=f"/sources/{source_id}/agent", status_code=303)
 
 
+@web_ui_router.get("/agents/runs/{run_id}", response_class=HTMLResponse)
+@require_auth
+async def agent_run_detail(
+    request: Request, run_id: str, db: Session = Depends(get_db)
+) -> StarletteResponse:
+    """Display details and logs for a specific agent run."""
+    import json
+    from datetime import datetime
+
+    from src.shared.config import settings
+
+    run = db.query(AgentTask).filter(AgentTask.id == run_id).first()
+    if not run:
+        raise HTTPException(status_code=404, detail="Agent run not found")
+
+    source = db.query(Source).filter(Source.id == run.source_id).first()
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+
+    log_data = None
+    log_file_path = None
+
+    if run.started_at:
+        timestamp = run.started_at.strftime("%Y%m%d_%H%M%S")
+        source_folder = source.short_code if source.short_code else source.id
+        log_file_path = (
+            settings.DATA_PATH / "agents" / source_folder / f"{timestamp}.json"
+        )
+
+        if log_file_path.exists():
+            with open(log_file_path) as f:
+                log_data = json.load(f)
+
+            if log_data and "logs" in log_data:
+                for log in log_data["logs"]:
+                    if "timestamp" in log:
+                        try:
+                            log["timestamp"] = datetime.fromisoformat(log["timestamp"])
+                        except (ValueError, TypeError):
+                            pass
+
+    templates = get_templates()
+    return templates.TemplateResponse(
+        "agent_run_detail.html",
+        {
+            "request": request,
+            "run": run,
+            "source": source,
+            "log_data": log_data,
+        },
+    )
+
+
 @web_ui_router.get("/puzzles/{puzzle_id}/download", response_class=FileResponse)
 @require_auth
 async def download_puzzle(

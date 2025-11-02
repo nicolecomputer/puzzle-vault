@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -21,6 +22,19 @@ CACHE_BUSTER = str(int(time.time()))
 
 templates = Jinja2Templates(directory="src/web/templates")
 templates.env.globals["cache_buster"] = CACHE_BUSTER
+
+
+def format_datetime(
+    dt: datetime | None, format_str: str = "%b %d, %Y %I:%M:%S %p"
+) -> str:
+    """Format datetime with timezone awareness."""
+    if dt is None:
+        return "N/A"
+    return dt.strftime(format_str)
+
+
+templates.env.filters["format_datetime"] = format_datetime
+
 app.mount("/static", StaticFiles(directory="src/web/templates"), name="static")
 
 # Include all routes from routers

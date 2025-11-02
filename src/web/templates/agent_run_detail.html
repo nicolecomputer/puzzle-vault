@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Run - {{ source.name }}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v={{ cache_buster }}">
+    <link rel="stylesheet" href="/static/css/agent_detail.css?v={{ cache_buster }}">
+    <style>
+        .logs-container {
+            margin-top: var(--spacing-2xl);
+            background: var(--color-bg-container);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+        }
+
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .logs-table tr.INFO {
+            border-left: 3px solid var(--color-info);
+            background: var(--color-bg-info);
+        }
+
+        .logs-table tr.WARNING {
+            border-left: 3px solid var(--color-warning);
+            background: var(--color-bg-warning);
+        }
+
+        .logs-table tr.ERROR {
+            border-left: 3px solid var(--color-error);
+            background: var(--color-bg-error);
+        }
+
+        .logs-table td {
+            padding: var(--spacing-md) var(--spacing-lg);
+            vertical-align: top;
+        }
+
+        .log-timestamp {
+            color: var(--color-text-light);
+            font-size: var(--font-size-sm);
+            white-space: nowrap;
+            width: 1%;
+        }
+
+        .log-level {
+            font-weight: bold;
+            font-size: var(--font-size-sm);
+            white-space: nowrap;
+            width: 1%;
+        }
+
+        .log-level.INFO {
+            color: var(--color-info);
+        }
+
+        .log-level.WARNING {
+            color: var(--color-warning);
+        }
+
+        .log-level.ERROR {
+            color: var(--color-error);
+        }
+
+        .log-message {
+            color: var(--color-text-dark);
+            font-size: var(--font-size-sm);
+        }
+
+        .log-logger {
+            color: var(--color-text-light);
+            font-size: var(--font-size-sm);
+            display: block;
+            margin-top: var(--spacing-xs);
+        }
+
+        .no-logs {
+            text-align: center;
+            padding: var(--spacing-3xl);
+            color: var(--color-text-light);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: var(--spacing-xl);
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .hide-mobile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="/sources/{{ source.id }}/agent" class="back-link">← Back to Agent Runs</a>
+
+        <div class="page-header">
+            <h1>{{ source.name }} - Run Details</h1>
+        </div>
+
+        <table class="data-table info-table">
+            <tr>
+                <th>Run ID</th>
+                <td style="font-family: monospace; font-size: 12px;">{{ run.id }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>
+                    <span class="badge badge-{{ run.status }}">
+                        {{ run.status }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <th>Queued</th>
+                <td>{{ run.queued_at | format_datetime }}</td>
+            </tr>
+            <tr>
+                <th>Started</th>
+                <td>{{ run.started_at | format_datetime }}</td>
+            </tr>
+            <tr>
+                <th>Completed</th>
+                <td>{{ run.completed_at | format_datetime }}</td>
+            </tr>
+            {% if log_data %}
+            <tr>
+                <th>Duration</th>
+                <td>{{ "%.3f" | format(log_data.duration_seconds) }} seconds</td>
+            </tr>
+            <tr>
+                <th>Puzzles Found</th>
+                <td>{{ log_data.puzzles_found }}</td>
+            </tr>
+            {% if log_data.error_message %}
+            <tr>
+                <th>Error</th>
+                <td style="color: var(--color-error);">{{ log_data.error_message }}</td>
+            </tr>
+            {% endif %}
+            {% endif %}
+        </table>
+
+        {% if log_data and log_data.logs %}
+        <div class="logs-container">
+            <h2>Logs</h2>
+            <table class="logs-table">
+                {% for log in log_data.logs %}
+                <tr class="{{ log.level }}">
+                    <td class="log-timestamp hide-mobile">{{ log.timestamp | format_datetime }}</td>
+                    <td class="log-level {{ log.level }} hide-mobile">{{ log.level }}</td>
+                    <td class="log-message">
+                        {{ log.message }}
+                        {% if log.logger %}
+                        <span class="log-logger">Logger: {{ log.logger }}</span>
+                        {% endif %}
+                        {% if log.exception %}
+                        <span class="log-logger">Exception: {{ log.exception_type }}: {{ log.exception }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% else %}
+        <div class="logs-container">
+            <div class="no-logs">
+                {% if run.status == 'pending' %}
+                ⏳ This run has not started yet. No logs available.
+                {% elif run.status == 'running' %}
+                ⚙️ This run is currently in progress. Logs will be available when it completes.
+                {% else %}
+                📋 No log file found for this run.
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

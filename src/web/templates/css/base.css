@@ -29,6 +29,14 @@
     /* Status Colors */
     --color-success: light-dark(#22c55e, #10b981);
     --color-error: light-dark(#ef4444, #f87171);
+    --color-warning: light-dark(#f59e0b, #fbbf24);
+    --color-info: light-dark(#3b82f6, #60a5fa);
+
+    /* Status Background Colors */
+    --color-bg-success: light-dark(#dcfce7, #14532d);
+    --color-bg-error: light-dark(#fee2e2, #7f1d1d);
+    --color-bg-warning: light-dark(#fef3c7, #78350f);
+    --color-bg-info: light-dark(#dbeafe, #1e3a8a);
 
     /* Spacing */
     --spacing-xs: 0.25rem;
