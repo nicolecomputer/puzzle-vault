@@ -73,6 +73,11 @@ class Settings:
     # Session timeout in seconds (default: 1 hour)
     SESSION_MAX_AGE: int = _config.getint("session", "max_age", fallback=3600)
 
+    # Importer scan interval in seconds (default: 15 seconds)
+    IMPORTER_SCAN_INTERVAL: int = _config.getint(
+        "importer", "scan_interval", fallback=15
+    )
+
     # Data path for all application data (database, config, puzzles)
     # This is set from the DATA_PATH environment variable only
     DATA_PATH: Path = DATA_PATH

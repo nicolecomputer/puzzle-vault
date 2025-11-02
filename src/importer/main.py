@@ -3,7 +3,7 @@
 import logging
 import signal
 
-from src.importer.watcher import ImportWatcher
+from src.importer.watcher import ImportScanner
 from src.shared.config import settings
 
 logging.basicConfig(
@@ -13,20 +13,20 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-watcher: ImportWatcher | None = None
+scanner: ImportScanner | None = None
 
 
 def signal_handler(signum, frame):
     """Handle shutdown signals gracefully."""
-    global watcher
+    global scanner
     logger.info("Shutdown signal received, stopping...")
-    if watcher:
-        watcher.stop()
+    if scanner:
+        scanner.stop()
 
 
 def main():
     """Start the importer service."""
-    global watcher
+    global scanner
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -38,18 +38,21 @@ def main():
     logger.info(f"Data path: {data_path}")
     logger.info(f"Puzzles path: {puzzles_path}")
 
-    watcher = ImportWatcher(puzzles_path)
-    watcher.start()
+    scan_interval = settings.IMPORTER_SCAN_INTERVAL
+    scanner = ImportScanner(puzzles_path, scan_interval=scan_interval)
+    scanner.start()
 
-    logger.info("Importer ready. Watching for new files. Press Ctrl+C to quit.")
+    logger.info(
+        f"Importer ready. Scanning every {scan_interval} seconds. Press Ctrl+C to quit."
+    )
 
     try:
-        watcher.wait()
+        scanner.wait()
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received")
     finally:
-        if watcher:
-            watcher.stop()
+        if scanner:
+            scanner.stop()
 
     logger.info("Importer service stopped")
 

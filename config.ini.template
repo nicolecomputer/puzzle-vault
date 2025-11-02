@@ -8,3 +8,9 @@ secret_key = {secret_key}
 
 # Session timeout in seconds (default: 3600 = 1 hour)
 max_age = 3600
+
+[importer]
+# How often to scan for new puzzle files (in seconds)
+# Lower values mean faster imports but more frequent scans
+# Default: 5 seconds
+scan_interval = 5
