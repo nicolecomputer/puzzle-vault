@@ -1,12 +1,19 @@
 """Authentication utilities for password hashing and verification."""
 
+import uuid
 from collections.abc import Callable
 from functools import wraps
 from typing import Any, cast
 
-from fastapi import Request
+from fastapi import Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from passlib.hash import pbkdf2_sha256
+from sqlalchemy.orm import Session
+
+from src.database import get_db
+from src.models.puzzle import Puzzle
+from src.models.source import Source
+from src.models.user import User
 
 
 def require_auth(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -76,3 +83,56 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         True if password matches, False otherwise
     """
     return cast(bool, pbkdf2_sha256.verify(plain_password, hashed_password))
+
+
+def get_user_from_key(key: str, db: Session = Depends(get_db)) -> User:
+    """Dependency to get authenticated user from feed key.
+
+    Args:
+        key: The feed key query parameter
+        db: Database session
+
+    Returns:
+        Authenticated User
+
+    Raises:
+        HTTPException: If authentication fails
+    """
+    try:
+        key_uuid = uuid.UUID(key)
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid feed key") from None
+
+    user = db.query(User).filter(User.feed_key == key_uuid).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid feed key")
+
+    return user
+
+
+def user_has_source_access(user: User, source: Source) -> bool:
+    """Check if a user has access to a source.
+
+    Args:
+        user: The user to check
+        source: The source to check access for
+
+    Returns:
+        True if user has access, False otherwise
+    """
+    source_ids = {src.id for src in user.sources}
+    return source.id in source_ids
+
+
+def user_has_puzzle_access(user: User, puzzle: Puzzle) -> bool:
+    """Check if a user has access to a puzzle via its source.
+
+    Args:
+        user: The user to check
+        puzzle: The puzzle to check access for
+
+    Returns:
+        True if user has access, False otherwise
+    """
+    source_ids = {src.id for src in user.sources}
+    return puzzle.source_id in source_ids

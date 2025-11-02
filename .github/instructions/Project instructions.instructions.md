@@ -9,6 +9,18 @@ applyTo: '**'
 - Always use the cache buster query parameter when linking to CSS files in HTML templates
 - All commands should be run through make
 
+## Code Organization Principles
+
+- Prefer small functions with clear "data in, data out" patterns
+- Router files should only contain route handlers and route-specific helpers
+- Route handlers should be thin wrappers that compose helper functions
+- Use FastAPI dependency injection for cross-cutting concerns like authentication
+- Extract business logic into utility modules (e.g., `feed_utils.py`)
+- Put authentication/authorization logic in `auth.py`
+- Add query methods as class methods on the model they query
+- Define TypedDict types for structured data instead of passing raw dictionaries
+- Organize helpers into modules based on domain, not technical layer
+
 ## Puzzle Data Storage Architecture
 
 ### Directory Structure

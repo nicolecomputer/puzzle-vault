@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String, event
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 from src.database import Base
 
@@ -66,6 +66,22 @@ class Source(Base):
         for subfolder in ["import", "puzzles", "errors"]:
             folder_path = source_path / subfolder
             folder_path.mkdir(parents=True, exist_ok=True)
+
+    @classmethod
+    def find_by_id_or_short_code(cls, identifier: str, db: Session) -> Source | None:
+        """Find a source by short_code or UUID.
+
+        Args:
+            identifier: Either a short_code or UUID string
+            db: Database session
+
+        Returns:
+            Source if found, None otherwise
+        """
+        source = db.query(cls).filter(cls.short_code == identifier).first()
+        if not source:
+            source = db.query(cls).filter(cls.id == identifier).first()
+        return source
 
 
 @event.listens_for(Source, "after_insert")

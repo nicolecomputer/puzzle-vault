@@ -1,16 +1,17 @@
 """Route handlers for public feed access."""
 
-import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
+from src.auth import get_user_from_key, user_has_puzzle_access, user_has_source_access
 from src.config import settings
 from src.database import get_db
+from src.feed_utils import build_feed_data, paginate_items, sort_puzzles_by_date
 from src.models.puzzle import Puzzle
 from src.models.source import Source
 from src.models.user import User
@@ -40,9 +41,9 @@ def get_base_url(request: Request) -> str:
 @feed_router.get("/feeds/{id}.json")
 async def get_feed(
     id: str,
-    key: str,
     request: Request,
     page: int = 1,
+    user: User = Depends(get_user_from_key),
     db: Session = Depends(get_db),
 ) -> JSONResponse:
     """Return a JSON feed for the given ID and key.
@@ -50,160 +51,47 @@ async def get_feed(
     ID can be either a short_code or a UUID.
     Supports pagination with ?page=N parameter.
     """
-    # Authenticate user by feed key
-    try:
-        key_uuid = uuid.UUID(key)
-    except ValueError:
-        return JSONResponse({"error": "Invalid feed key"}, status_code=401)
-
-    user = db.query(User).filter(User.feed_key == key_uuid).first()
-
-    if not user:
-        return JSONResponse({"error": "Invalid feed key"}, status_code=401)
-
-    # Get the source - try short_code first, then UUID
-    source = db.query(Source).filter(Source.short_code == id).first()
+    source = Source.find_by_id_or_short_code(id, db)
     if not source:
-        source = db.query(Source).filter(Source.id == id).first()
+        raise HTTPException(status_code=404, detail="Source not found")
 
-    if not source:
-        return JSONResponse({"error": "Source not found"}, status_code=404)
-
-    # Check if user has access to this source
-    source_ids = {src.id for src in user.sources}
-    if source.id not in source_ids:
-        return JSONResponse(
-            {"error": "Access denied: User does not have access to this source"},
+    if not user_has_source_access(user, source):
+        raise HTTPException(
             status_code=403,
+            detail="Access denied: User does not have access to this source",
         )
 
-    # Get base URL for constructing absolute URLs
     base_url = get_base_url(request)
+    all_puzzles = sort_puzzles_by_date(source.puzzles)
+    puzzles, total_pages, validated_page = paginate_items(all_puzzles, page)
 
-    # Use short_code if available for feed identifier
-    feed_identifier = source.short_code if source.short_code else source.id
-
-    # Sort puzzles by puzzle_date (most recent first)
-    # Puzzles without dates go to the end
-    all_puzzles = sorted(
-        source.puzzles,
-        key=lambda p: p.puzzle_date if p.puzzle_date else p.created_at,
-        reverse=True,
+    feed_data = build_feed_data(
+        source, puzzles, base_url, str(user.feed_key), validated_page, total_pages
     )
-
-    # Pagination
-    per_page = 50
-    total_puzzles = len(all_puzzles)
-    total_pages = (total_puzzles + per_page - 1) // per_page if total_puzzles > 0 else 1
-
-    # Ensure page is within valid range
-    if page < 1:
-        page = 1
-    elif page > total_pages:
-        page = total_pages
-
-    offset = (page - 1) * per_page
-    puzzles = all_puzzles[offset : offset + per_page]
-
-    # Build feed data
-    feed_data: dict[str, object] = {
-        "version": "https://jsonfeed.org/version/1.1",
-        "title": source.name,
-        "home_page_url": f"{base_url}/sources/{source.id}",
-        "feed_url": f"{base_url}/feeds/{feed_identifier}.json?key={key}",
-        "description": f"A Puzzlecast feed for source: {source.name}",
-    }
-
-    # Add icon if it exists
-    icon_url = source.icon_url(base_url)
-    if icon_url:
-        feed_data["icon"] = icon_url
-
-    # Add next_url if there are more pages
-    if page < total_pages:
-        feed_data["next_url"] = (
-            f"{base_url}/feeds/{feed_identifier}.json?key={key}&page={page + 1}"
-        )
-
-    # Build items array
-    items: list[dict[str, object]] = []
-    for puzzle in puzzles:
-        # Build the item URL (puzzle detail page)
-        item_url = f"{base_url}/puzzles/{puzzle.id}?key={key}"
-
-        # Create the item
-        item: dict[str, object] = {
-            "id": item_url,  # Use full URL as ID per spec recommendation
-            "url": item_url,
-            "title": puzzle.title,
-        }
-
-        # Add content_text (required by spec - must have content_text or content_html)
-        # Build a simple description of the puzzle
-        content_parts = [puzzle.title]
-        if puzzle.author:
-            content_parts.append(f"By {puzzle.author}")
-        if puzzle.puzzle_date:
-            content_parts.append(
-                f"Published {puzzle.puzzle_date.strftime('%B %d, %Y')}"
-            )
-        item["content_text"] = " • ".join(content_parts)
-
-        # Add author if present
-        if puzzle.author:
-            item["authors"] = [{"name": puzzle.author}]
-
-        # Add date_published if puzzle_date is present
-        if puzzle.puzzle_date:
-            # Convert date to RFC 3339 format (YYYY-MM-DD with time at midnight UTC)
-            item["date_published"] = f"{puzzle.puzzle_date.isoformat()}T00:00:00Z"
-
-        # Add attachment for the .puz file
-        download_url = f"{base_url}/puzzles/{puzzle.id}.puz?key={key}"
-        item["attachments"] = [
-            {
-                "url": download_url,
-                "mime_type": "application/x-crossword",
-            }
-        ]
-
-        items.append(item)
-
-    feed_data["items"] = items
 
     return JSONResponse(content=feed_data)
 
 
 @feed_router.get("/puzzles/{puzzle_id}.puz", response_class=FileResponse)
 async def download_puzzle_by_key(
-    puzzle_id: str, key: str, db: Session = Depends(get_db)
+    puzzle_id: str,
+    user: User = Depends(get_user_from_key),
+    db: Session = Depends(get_db),
 ) -> StarletteResponse:
     """Download a puzzle file using feed key authentication."""
-    try:
-        key_uuid = uuid.UUID(key)
-    except ValueError:
-        return JSONResponse({"error": "Invalid feed key"}, status_code=401)
-
-    user = db.query(User).filter(User.feed_key == key_uuid).first()
-
-    if not user:
-        return JSONResponse({"error": "Invalid feed key"}, status_code=401)
-
     puzzle = db.query(Puzzle).filter(Puzzle.id == puzzle_id).first()
-
     if not puzzle:
-        return JSONResponse({"error": "Puzzle not found"}, status_code=404)
+        raise HTTPException(status_code=404, detail="Puzzle not found")
 
-    source_ids = {source.id for source in user.sources}
-    if puzzle.source_id not in source_ids:
-        return JSONResponse(
-            {"error": "Access denied: User does not have access to this puzzle source"},
+    if not user_has_puzzle_access(user, puzzle):
+        raise HTTPException(
             status_code=403,
+            detail="Access denied: User does not have access to this puzzle source",
         )
 
     file_path = Path(puzzle.file_path)
     if not file_path.exists():
-        return JSONResponse({"error": "Puzzle file not found"}, status_code=404)
+        raise HTTPException(status_code=404, detail="Puzzle file not found")
 
     return FileResponse(
         path=file_path,
@@ -214,39 +102,25 @@ async def download_puzzle_by_key(
 
 @feed_router.get("/puzzles/{puzzle_id}")
 async def puzzle_detail(
-    puzzle_id: str, key: str, request: Request, db: Session = Depends(get_db)
+    puzzle_id: str,
+    request: Request,
+    user: User = Depends(get_user_from_key),
+    db: Session = Depends(get_db),
 ) -> StarletteResponse:
     """Display puzzle detail page using feed key authentication."""
-    # Authenticate user by feed key
-    try:
-        key_uuid = uuid.UUID(key)
-    except ValueError:
-        return JSONResponse({"error": "Invalid feed key"}, status_code=401)
-
-    user = db.query(User).filter(User.feed_key == key_uuid).first()
-
-    if not user:
-        return JSONResponse({"error": "Invalid feed key"}, status_code=401)
-
-    # Get the puzzle
     puzzle = db.query(Puzzle).filter(Puzzle.id == puzzle_id).first()
-
     if not puzzle:
-        return JSONResponse({"error": "Puzzle not found"}, status_code=404)
+        raise HTTPException(status_code=404, detail="Puzzle not found")
 
-    # Check if user has access to this puzzle's source
-    source_ids = {source.id for source in user.sources}
-    if puzzle.source_id not in source_ids:
-        return JSONResponse(
-            {"error": "Access denied: User does not have access to this puzzle source"},
+    if not user_has_puzzle_access(user, puzzle):
+        raise HTTPException(
             status_code=403,
+            detail="Access denied: User does not have access to this puzzle source",
         )
 
-    # Get the source information
     source = db.query(Source).filter(Source.id == puzzle.source_id).first()
-
     if not source:
-        return JSONResponse({"error": "Source not found"}, status_code=404)
+        raise HTTPException(status_code=404, detail="Source not found")
 
     templates = get_templates()
     return templates.TemplateResponse(
@@ -255,7 +129,7 @@ async def puzzle_detail(
             "request": request,
             "puzzle": puzzle,
             "source": source,
-            "feed_key": key,
+            "feed_key": str(user.feed_key),
         },
     )
 
@@ -265,11 +139,7 @@ async def get_source_icon(
     folder_name: str, db: Session = Depends(get_db)
 ) -> StarletteResponse:
     """Get a source icon file (public, no authentication required)."""
-    # Find the source by folder_name (could be short_code or UUID)
-    source = db.query(Source).filter(Source.short_code == folder_name).first()
-    if not source:
-        source = db.query(Source).filter(Source.id == folder_name).first()
-
+    source = Source.find_by_id_or_short_code(folder_name, db)
     if not source:
         return JSONResponse({"error": "Source not found"}, status_code=404)
 
