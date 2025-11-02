@@ -28,4 +28,39 @@ AGENT_INFO = AgentInfo(
             ],
         }
     },
+    presets=[
+        {
+            "id": "usa",
+            "name": "USA Today",
+            "short_code": "usa",
+            "config": {
+                "outlet_keyword": "usa",
+                "days_to_fetch": 1,
+                "username": "",
+                "password": "",
+            },
+        },
+        {
+            "id": "atl",
+            "name": "Atlantic",
+            "short_code": "atl",
+            "config": {
+                "outlet_keyword": "atl",
+                "days_to_fetch": 1,
+                "username": "",
+                "password": "",
+            },
+        },
+        {
+            "id": "pzm",
+            "name": "Puzzmo",
+            "short_code": "pzm",
+            "config": {
+                "outlet_keyword": "pzm",
+                "days_to_fetch": 1,
+                "username": "",
+                "password": "",
+            },
+        },
+    ],
 )

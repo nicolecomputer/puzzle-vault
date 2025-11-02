@@ -2,11 +2,20 @@
 
 import importlib
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 from pydantic import BaseModel
 
 from src.agents.base_agent import BaseAgent
+
+
+class AgentPreset(TypedDict):
+    """A preset configuration for quickly adding a common source."""
+
+    id: str
+    name: str
+    short_code: str
+    config: dict[str, Any]
 
 
 class AgentInfo:
@@ -20,6 +29,7 @@ class AgentInfo:
         agent_class: type[BaseAgent],
         config_schema: type[BaseModel],
         ui_hints: dict[str, Any] | None = None,
+        presets: list[AgentPreset] | None = None,
     ):
         self.type = type
         self.name = name
@@ -27,6 +37,7 @@ class AgentInfo:
         self.agent_class = agent_class
         self.config_schema = config_schema
         self.ui_hints = ui_hints or {}
+        self.presets = presets or []
 
 
 def discover_agents() -> dict[str, AgentInfo]:

@@ -43,9 +43,22 @@ async def list_agents(request: Request) -> dict:
                 "description": agent_info.description,
                 "config_schema": agent_info.config_schema.model_json_schema(),
                 "ui_hints": agent_info.ui_hints,
+                "presets": agent_info.presets,
             }
         )
     return {"agents": agents}
+
+
+@web_ui_router.get("/api/sources/short-codes")
+@require_auth
+async def list_user_short_codes(
+    request: Request, db: Session = Depends(get_db)
+) -> dict:
+    """Return list of short codes for the current user's sources."""
+    user = get_user_from_session(request, db)
+    sources = db.query(Source).filter(Source.user_id == user.id).all()
+    short_codes = [s.short_code for s in sources if s.short_code]
+    return {"short_codes": short_codes}
 
 
 @web_ui_router.get("/", response_class=HTMLResponse)

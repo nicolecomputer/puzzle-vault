@@ -16,6 +16,93 @@
             margin-bottom: 2rem;
         }
 
+        .presets-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--color-bg-light);
+            border-radius: 8px;
+        }
+
+        .presets-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .preset-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .preset-card {
+            padding: 1rem;
+            background: white;
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-card:hover:not(.preset-taken) {
+            border-color: var(--color-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .preset-card.preset-taken {
+            opacity: 0.6;
+            cursor: not-allowed;
+            border-color: var(--color-border);
+        }
+
+        .preset-card h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .preset-card .preset-agent {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .preset-card .preset-status {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .preset-card.preset-taken .preset-status {
+            color: var(--color-success);
+        }
+
+        .preset-card:not(.preset-taken) .preset-status {
+            color: var(--color-primary);
+        }
+
+        .divider {
+            margin: 2rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 1rem;
+            position: relative;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+        }
+
         .source-form {
             display: flex;
             flex-direction: column;
@@ -55,6 +142,16 @@
 <body>
     <div class="container form-container">
         <h1>Add New Source</h1>
+
+        <div id="presets-section" class="presets-section" style="display: none;">
+            <h2>Quick Add Popular Sources</h2>
+            <div id="preset-cards" class="preset-cards"></div>
+        </div>
+
+        <div class="divider">
+            <span>or configure manually</span>
+        </div>
+
         <form class="source-form" method="post" action="/sources">
             <div class="form-group">
                 <label for="name">Source Name</label>
@@ -88,21 +185,93 @@
     <script>
         let agents = [];
         let currentAgentType = null;
+        let takenShortCodes = [];
 
-        // Fetch available agents
-        fetch('/api/agents')
-            .then(response => response.json())
-            .then(data => {
-                agents = data.agents;
-                const select = document.getElementById('agent_type');
+        // Fetch available agents and user's existing short codes
+        Promise.all([
+            fetch('/api/agents').then(r => r.json()),
+            fetch('/api/sources/short-codes').then(r => r.json())
+        ]).then(([agentsData, shortCodesData]) => {
+            agents = agentsData.agents;
+            takenShortCodes = shortCodesData.short_codes;
 
-                agents.forEach(agent => {
-                    const option = document.createElement('option');
-                    option.value = agent.type;
-                    option.textContent = agent.name;
-                    select.appendChild(option);
-                });
+            const select = document.getElementById('agent_type');
+
+            agents.forEach(agent => {
+                const option = document.createElement('option');
+                option.value = agent.type;
+                option.textContent = agent.name;
+                select.appendChild(option);
             });
+
+            renderPresets();
+        });
+
+        function renderPresets() {
+            const presetsSection = document.getElementById('presets-section');
+            const presetsContainer = document.getElementById('preset-cards');
+            presetsContainer.innerHTML = '';
+
+            let hasPresets = false;
+
+            agents.forEach(agent => {
+                if (agent.presets && agent.presets.length > 0) {
+                    hasPresets = true;
+                    agent.presets.forEach(preset => {
+                        const isTaken = takenShortCodes.includes(preset.short_code);
+                        const card = document.createElement('div');
+                        card.className = 'preset-card' + (isTaken ? ' preset-taken' : '');
+
+                        const title = document.createElement('h3');
+                        title.textContent = preset.name;
+
+                        const agentInfo = document.createElement('div');
+                        agentInfo.className = 'preset-agent';
+                        agentInfo.textContent = `via ${agent.name}`;
+
+                        const status = document.createElement('div');
+                        status.className = 'preset-status';
+                        status.textContent = isTaken ? '✓ Already added' : 'Click to add';
+
+                        card.appendChild(title);
+                        card.appendChild(agentInfo);
+                        card.appendChild(status);
+
+                        if (!isTaken) {
+                            card.addEventListener('click', () => {
+                                applyPreset(agent, preset);
+                            });
+                        }
+
+                        presetsContainer.appendChild(card);
+                    });
+                }
+            });
+
+            if (hasPresets) {
+                presetsSection.style.display = 'block';
+            }
+        }
+
+        function applyPreset(agent, preset) {
+            document.getElementById('name').value = preset.name;
+            document.getElementById('short_code').value = preset.short_code;
+            document.getElementById('agent_type').value = agent.type;
+
+            const event = new Event('change');
+            document.getElementById('agent_type').dispatchEvent(event);
+
+            setTimeout(() => {
+                Object.entries(preset.config).forEach(([key, value]) => {
+                    const input = document.getElementById(`config_${key}`);
+                    if (input) {
+                        input.value = value;
+                    }
+                });
+
+                document.getElementById('name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
 
         // Handle agent type selection
         document.getElementById('agent_type').addEventListener('change', function (e) {
