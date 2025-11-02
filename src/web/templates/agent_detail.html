@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Details - {{ source_title }}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v={{ cache_buster }}">
+    <link rel="stylesheet" href="/static/css/agent_detail.css?v={{ cache_buster }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>{{ source_title }} - Agent</h1>
+
+        <table class="data-table info-table">
+            <tr>
+                <th>Agent Type</th>
+                <td>{{ agent_type or 'N/A' }}</td>
+            </tr>
+            <tr>
+                <th>Agent Enabled</th>
+                <td>
+                    <span class="badge {% if agent_enabled %}badge-success{% else %}badge-error{% endif %}">
+                        {{ 'Yes' if agent_enabled else 'No' }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <th>Total Runs</th>
+                <td>{{ total_runs }}</td>
+            </tr>
+        </table>
+
+        <table class="runs-section">
+            <tr>
+                <th colspan="5">Agent Runs</th>
+            </tr>
+            <tr class="runs-header">
+                <th>Status</th>
+                <th>Queued</th>
+                <th class="hide-mobile">Started</th>
+                <th class="hide-mobile">Completed</th>
+                <th class="hide-mobile">Duration</th>
+            </tr>
+            {% if runs %}
+            {% for run in runs %}
+            <tr>
+                <td>
+                    <span class="badge badge-{{ run.status }}">
+                        {{ run.status }}
+                    </span>
+                </td>
+                <td>
+                    {% if run.queued_at %}{{ run.queued_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif %}
+                </td>
+                <td class="hide-mobile">
+                    {% if run.started_at %}{{ run.started_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif %}
+                </td>
+                <td class="hide-mobile">
+                    {% if run.completed_at %}{{ run.completed_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}N/A{% endif
+                    %}
+                </td>
+                <td class="hide-mobile">
+                    {% if run.duration %}{{ run.duration }}{% else %}N/A{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="5" class="no-runs">No agent runs found</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="/sources/{{ source_id }}/agent?page={{ page - 1 }}" class="btn btn-link pagination-btn">←
+                Previous</a>
+            {% else %}
+            <span class="btn btn-link pagination-btn disabled">← Previous</span>
+            {% endif %}
+
+            <span class="pagination-info">Page {{ page }} of {{ total_pages }}</span>
+
+            {% if page < total_pages %} <a href="/sources/{{ source_id }}/agent?page={{ page + 1 }}"
+                class="btn btn-link pagination-btn">Next →</a>
+                {% else %}
+                <span class="btn btn-link pagination-btn disabled">Next →</span>
+                {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

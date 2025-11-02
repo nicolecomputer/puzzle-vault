@@ -10,6 +10,7 @@ from starlette.responses import Response as StarletteResponse
 
 from src.agents.registry import AGENT_REGISTRY
 from src.shared.database import get_db
+from src.shared.models.agent_task import AgentTask
 from src.shared.models.puzzle import Puzzle
 from src.shared.models.source import Source
 from src.shared.models.user import User
@@ -202,6 +203,57 @@ async def source_detail(
             "feed_url": f"/feeds/{feed_identifier}.json?key={user.feed_key}",
             "feed_key": str(user.feed_key),
             "puzzles": puzzles,
+            "source_id": id,
+            "page": validated_page,
+            "total_pages": total_pages,
+        },
+    )
+
+
+@web_ui_router.get("/sources/{id}/agent", response_class=HTMLResponse)
+@require_auth
+async def agent_detail(
+    request: Request, id: str, page: int = 1, db: Session = Depends(get_db)
+) -> StarletteResponse:
+    """Display agent runs for a source."""
+    source = db.query(Source).filter(Source.id == id).first()
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+
+    all_runs = (
+        db.query(AgentTask)
+        .filter(AgentTask.source_id == id)
+        .order_by(AgentTask.queued_at.desc())
+        .all()
+    )
+
+    per_page = 30
+    runs, total_pages, validated_page = paginate(all_runs, page, per_page)
+
+    runs_with_duration = []
+    for run in runs:
+        duration = None
+        if run.started_at and run.completed_at:
+            delta = run.completed_at - run.started_at
+            total_seconds = int(delta.total_seconds())
+            minutes = total_seconds // 60
+            seconds = total_seconds % 60
+            if minutes > 0:
+                duration = f"{minutes}m {seconds}s"
+            else:
+                duration = f"{seconds}s"
+        runs_with_duration.append({"duration": duration, **run.__dict__})
+
+    templates = get_templates()
+    return templates.TemplateResponse(
+        "agent_detail.html",
+        {
+            "request": request,
+            "source_title": source.name,
+            "agent_type": source.agent_type,
+            "agent_enabled": source.agent_enabled,
+            "total_runs": len(all_runs),
+            "runs": runs_with_duration,
             "source_id": id,
             "page": validated_page,
             "total_pages": total_pages,
