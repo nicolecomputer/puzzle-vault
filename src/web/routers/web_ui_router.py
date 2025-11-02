@@ -243,7 +243,6 @@ async def create_preset_source(
     import json
 
     user = get_user_from_session(request, db)
-    username = request.session.get("username")
 
     # Parse the preset data
     preset = json.loads(preset_data)
@@ -284,7 +283,7 @@ async def create_preset_source(
     source.last_scheduled_run_at = datetime.utcnow()
     db.commit()
 
-    return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
+    return RedirectResponse(url=f"/sources/{source.id}", status_code=303)
 
 
 @web_ui_router.post("/sources", response_class=HTMLResponse)
@@ -303,7 +302,6 @@ async def create_source(
 ) -> StarletteResponse:
     """Create a new source and redirect to sources page."""
     user = get_user_from_session(request, db)
-    username = request.session.get("username")
 
     normalized_short_code = normalize_short_code(short_code)
 
@@ -344,7 +342,7 @@ async def create_source(
         source.last_scheduled_run_at = datetime.utcnow()
         db.commit()
 
-    return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
+    return RedirectResponse(url=f"/sources/{source.id}", status_code=303)
 
 
 @web_ui_router.get("/sources/{id}", response_class=HTMLResponse)
