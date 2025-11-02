@@ -1,4 +1,4 @@
-.PHONY: dev start db-migrate db-makemigration db-seed db-reset test format lint typecheck import
+.PHONY: dev start db-migrate db-makemigration db-seed db-reset test format lint typecheck import run-agent-worker
 
 dev:
 	DATA_PATH=./data uv run honcho start
@@ -8,6 +8,9 @@ start:
 
 import:
 	DATA_PATH=./data uv run python -m src.importer.main
+
+run-agent-worker:
+	DATA_PATH=./data uv run python -m src.agents.worker
 
 db-migrate:
 	DATA_PATH=./data uv run alembic upgrade head

@@ -1,2 +1,3 @@
 web: uv run uvicorn src.web.main:app --host 0.0.0.0 --port 8000
 importer: uv run python -m src.importer.main
+agents: uv run python -m src.agents.worker

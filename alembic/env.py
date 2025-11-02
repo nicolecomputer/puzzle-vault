@@ -7,6 +7,7 @@ from src.shared.config import settings
 
 # Import our database configuration
 from src.shared.database import Base
+from src.shared.models.agent_task import AgentTask  # noqa: F401
 from src.shared.models.puzzle import Puzzle  # noqa: F401
 from src.shared.models.source import Source  # noqa: F401
 

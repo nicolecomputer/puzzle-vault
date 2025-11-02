@@ -31,6 +31,9 @@ class Source(Base):
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     short_code: Mapped[str | None] = mapped_column(String, nullable=True, unique=True)
+    agent_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    agent_config: Mapped[str | None] = mapped_column(String, nullable=True)
+    agent_enabled: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
