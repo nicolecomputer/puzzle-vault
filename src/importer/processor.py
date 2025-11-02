@@ -124,8 +124,10 @@ class FileProcessor:
                 logger.info(
                     f"Duplicate puzzle already exists (ID: {existing_puzzle.id}, hash: {file_hash[:8]}...), deleting import files"
                 )
-                puz_file.unlink()
-                meta_file.unlink()
+                if puz_file.exists():
+                    puz_file.unlink()
+                if meta_file.exists():
+                    meta_file.unlink()
                 return
 
             puzzle = Puzzle(
@@ -192,7 +194,8 @@ class FileProcessor:
         dest_meta = errors_dir / f"{base_name}_{timestamp}.meta.json"
         error_file = errors_dir / f"{base_name}_{timestamp}.error.txt"
 
-        shutil.move(str(puz_file), str(dest_puz))
+        if puz_file.exists():
+            shutil.move(str(puz_file), str(dest_puz))
         if meta_file.exists():
             shutil.move(str(meta_file), str(dest_meta))
 
