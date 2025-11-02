@@ -32,6 +32,23 @@
         .form-actions .btn-submit {
             flex: 1;
         }
+
+        .agent-config-fields {
+            display: none;
+            padding: 1rem;
+            background: var(--color-bg-light);
+            border-radius: 4px;
+            margin-top: 0.5rem;
+        }
+
+        .agent-config-fields.active {
+            display: block;
+        }
+
+        .form-group label {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
     </style>
 </head>
 
@@ -51,12 +68,115 @@
                     Optional short code for folder names (lowercase letters, numbers, and hyphens only)
                 </small>
             </div>
+            <div class="form-group">
+                <label for="agent_type">Agent Type</label>
+                <select id="agent_type" name="agent_type">
+                    <option value="">None (Manual Upload)</option>
+                </select>
+                <small>Select an agent to automatically fetch puzzles</small>
+            </div>
+            <div id="agent-config-container"></div>
+            <input type="hidden" id="agent_config" name="agent_config" value="">
+            <input type="hidden" name="agent_enabled" value="true">
             <div class="form-actions">
                 <a href="/user/{{ username }}/sources" class="btn-cancel">Cancel</a>
                 <button type="submit" class="btn-submit">Create Source</button>
             </div>
         </form>
     </div>
+
+    <script>
+        let agents = [];
+        let currentAgentType = null;
+
+        // Fetch available agents
+        fetch('/api/agents')
+            .then(response => response.json())
+            .then(data => {
+                agents = data.agents;
+                const select = document.getElementById('agent_type');
+
+                agents.forEach(agent => {
+                    const option = document.createElement('option');
+                    option.value = agent.type;
+                    option.textContent = agent.name;
+                    select.appendChild(option);
+                });
+            });
+
+        // Handle agent type selection
+        document.getElementById('agent_type').addEventListener('change', function (e) {
+            const agentType = e.target.value;
+            const container = document.getElementById('agent-config-container');
+
+            container.innerHTML = '';
+            currentAgentType = agentType;
+
+            if (!agentType) {
+                return;
+            }
+
+            const agent = agents.find(a => a.type === agentType);
+            if (!agent || !agent.config_schema.properties) {
+                return;
+            }
+
+            // Create form fields based on JSON schema
+            const configDiv = document.createElement('div');
+            configDiv.className = 'agent-config-fields active';
+
+            Object.entries(agent.config_schema.properties).forEach(([key, schema]) => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+
+                const label = document.createElement('label');
+                label.htmlFor = `config_${key}`;
+                label.textContent = schema.title || key;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `config_${key}`;
+                input.name = `config_${key}`;
+                input.dataset.configKey = key;
+
+                if (schema.default !== undefined) {
+                    input.value = schema.default;
+                }
+
+                if (schema.description) {
+                    const small = document.createElement('small');
+                    small.textContent = schema.description;
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(input);
+                    formGroup.appendChild(small);
+                } else {
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(input);
+                }
+
+                configDiv.appendChild(formGroup);
+            });
+
+            container.appendChild(configDiv);
+        });
+
+        // Build config JSON on submit
+        document.querySelector('.source-form').addEventListener('submit', function (e) {
+            if (!currentAgentType) {
+                return;
+            }
+
+            const configInputs = document.querySelectorAll('[data-config-key]');
+            const config = {};
+
+            configInputs.forEach(input => {
+                const key = input.dataset.configKey;
+                config[key] = input.value;
+            });
+
+            document.getElementById('agent_config').value = JSON.stringify(config);
+        });
+    </script>
 </body>
 
 </html>

@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 
 from src.agents.base_agent import BaseAgent, FetchResult
+from src.agents.null.config import NullConfig
 from src.shared.models.source import Source
 
 logger = logging.getLogger(__name__)
@@ -22,8 +23,15 @@ class NullAgent(BaseAgent):
         Returns:
             FetchResult indicating success with 0 puzzles found
         """
-        logger.info(f"🔵 Null agent is alive! Running for source: {source.name}")
-        print(f"🔵 Null agent is alive! Running for source: {source.name}")
+        # Parse config
+        config = NullConfig.model_validate_json(source.agent_config or "{}")
+
+        message = f"🔵 Null agent is alive! Running for source: {source.name}"
+        if config.extra_string:
+            message += f" - Extra: {config.extra_string}"
+
+        logger.info(message)
+        print(message)
 
         return FetchResult(
             success=True,

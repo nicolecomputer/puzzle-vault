@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
+from src.agents.registry import AGENT_REGISTRY
 from src.shared.database import get_db
 from src.shared.models.puzzle import Puzzle
 from src.shared.models.source import Source
@@ -26,6 +27,24 @@ def get_templates() -> Jinja2Templates:
     from src.web.main import templates  # type: ignore[attr-defined]
 
     return templates
+
+
+@web_ui_router.get("/api/agents")
+@require_auth
+async def list_agents(request: Request) -> dict:
+    """Return list of available agents with their config schemas."""
+    agents = []
+    for agent_info in AGENT_REGISTRY.values():
+        agents.append(
+            {
+                "type": agent_info.type,
+                "name": agent_info.name,
+                "description": agent_info.description,
+                "config_schema": agent_info.config_schema.model_json_schema(),
+                "ui_hints": agent_info.ui_hints,
+            }
+        )
+    return {"agents": agents}
 
 
 @web_ui_router.get("/", response_class=HTMLResponse)
@@ -125,6 +144,9 @@ async def create_source(
     request: Request,
     name: str = Form(...),
     short_code: str | None = Form(None),
+    agent_type: str | None = Form(None),
+    agent_config: str | None = Form(None),
+    agent_enabled: bool = Form(True),
     db: Session = Depends(get_db),
 ) -> StarletteResponse:
     """Create a new source and redirect to sources page."""
@@ -133,7 +155,17 @@ async def create_source(
 
     normalized_short_code = normalize_short_code(short_code)
 
-    source = Source(name=name, user_id=user.id, short_code=normalized_short_code)
+    # Convert empty string to None for agent_type
+    final_agent_type = agent_type if agent_type else None
+
+    source = Source(
+        name=name,
+        user_id=user.id,
+        short_code=normalized_short_code,
+        agent_type=final_agent_type,
+        agent_config=agent_config,
+        agent_enabled=agent_enabled,
+    )
     db.add(source)
     db.commit()
 
