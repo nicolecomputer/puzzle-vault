@@ -53,6 +53,7 @@ reportMissingImports = false
 
 [dependency-groups]
 dev = [
+  "honcho>=2.0.0",
   "pyright>=1.1.407",
   "pytest>=8.4.2",
   "pytest-cov>=7.0.0",

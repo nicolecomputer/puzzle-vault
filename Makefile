@@ -1,13 +1,13 @@
 .PHONY: dev start db-migrate db-makemigration db-seed db-reset test format lint typecheck import
 
 dev:
-	DATA_PATH=./data uv run uvicorn src.web.main:app --reload --host 0.0.0.0 --port 8000
+	DATA_PATH=./data uv run honcho start
 
 start:
-	DATA_PATH=/data uv run uvicorn src.web.main:app --host 0.0.0.0 --port 8000
+	DATA_PATH=/data uv run honcho start
 
 import:
-	DATA_PATH=./data uv run python -m src.importer.processor
+	DATA_PATH=./data uv run python -m src.importer.main
 
 db-migrate:
 	DATA_PATH=./data uv run alembic upgrade head
@@ -20,10 +20,6 @@ db-makemigration:
 	DATA_PATH=./data uv run alembic revision --autogenerate -m "$(msg)"
 
 db-seed:
-	DATA_PATH=./data uv run python -m scripts.seed_data
-
-db-reset:
-	DATA_PATH=./data uv run python -m scripts.reset_db
 	DATA_PATH=./data uv run python -m scripts.seed_data
 
 test:
