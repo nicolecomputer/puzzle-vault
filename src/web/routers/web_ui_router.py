@@ -261,6 +261,26 @@ async def agent_detail(
     )
 
 
+@web_ui_router.post("/agents/run")
+@require_auth
+async def enqueue_agent_run(
+    request: Request, source_id: str = Form(...), db: Session = Depends(get_db)
+) -> StarletteResponse:
+    """Enqueue an agent run for a source."""
+    source = db.query(Source).filter(Source.id == source_id).first()
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+
+    if not source.agent_enabled or not source.agent_type:
+        raise HTTPException(status_code=400, detail="Agent not enabled for this source")
+
+    task = AgentTask(source_id=source_id, status="pending")
+    db.add(task)
+    db.commit()
+
+    return RedirectResponse(url=f"/sources/{source_id}/agent", status_code=303)
+
+
 @web_ui_router.get("/puzzles/{puzzle_id}/download", response_class=FileResponse)
 @require_auth
 async def download_puzzle(

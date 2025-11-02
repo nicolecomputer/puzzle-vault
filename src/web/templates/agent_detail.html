@@ -11,7 +11,13 @@
 
 <body>
     <div class="container">
-        <h1>{{ source_title }} - Agent</h1>
+        <div class="page-header">
+            <h1>{{ source_title }} - Agent</h1>
+            <form action="/agents/run" method="POST" style="margin: 0;">
+                <input type="hidden" name="source_id" value="{{ source_id }}">
+                <button type="submit" class="add-puzzle-btn">Run Now</button>
+            </form>
+        </div>
 
         <table class="data-table info-table">
             <tr>
