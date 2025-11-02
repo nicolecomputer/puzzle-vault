@@ -8,7 +8,9 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from src.agents.agent_logger import AgentLogger, AgentLogHandler
 from src.agents.registry import get_agent_class
+from src.shared.config import settings
 from src.shared.database import SessionLocal
 from src.shared.models.agent_task import AgentTask
 from src.shared.models.source import Source
@@ -34,36 +36,84 @@ async def process_task(task: AgentTask, db: Session) -> None:
     task.started_at = datetime.utcnow()
     db.commit()
 
-    try:
-        source = db.query(Source).filter(Source.id == task.source_id).first()
-        if not source:
-            raise Exception(f"Source {task.source_id} not found")
+    # Get source
+    source = db.query(Source).filter(Source.id == task.source_id).first()
+    if not source:
+        logger.error(f"Source {task.source_id} not found")
+        task.status = "failed"
+        task.completed_at = datetime.utcnow()
+        db.commit()
+        return
 
+    # Initialize agent logger
+    agent_logger = AgentLogger(source, settings.DATA_PATH)
+    agent_logger.info("Agent task started", task_id=str(task.id))
+
+    # Add handler to capture root logger output
+    log_handler = AgentLogHandler(agent_logger)
+    log_handler.setLevel(logging.INFO)
+    root_logger = logging.getLogger()
+    root_logger.addHandler(log_handler)
+
+    try:
         if not source.agent_type:
-            raise Exception(f"Source {source.name} has no agent type configured")
+            error_msg = f"Source {source.name} has no agent type configured"
+            agent_logger.error(error_msg)
+            raise Exception(error_msg)
 
         agent_class = get_agent_class(source.agent_type)
         if not agent_class:
-            raise Exception(f"Agent type {source.agent_type} not found in registry")
+            error_msg = f"Agent type {source.agent_type} not found in registry"
+            agent_logger.error(error_msg)
+            raise Exception(error_msg)
 
+        agent_logger.info(f"Running agent: {source.agent_type}")
         agent = agent_class()
         result = await agent.fetch_puzzles(source)
 
         if result.success:
             task.status = "completed"
+            agent_logger.info(
+                "Agent completed successfully",
+                puzzles_found=result.puzzles_found,
+            )
             logger.info(
                 f"Task {task.id} completed successfully. Found {result.puzzles_found} puzzles"
             )
         else:
             task.status = "failed"
+            agent_logger.error(
+                "Agent failed",
+                error_message=result.error_message,
+            )
             logger.error(f"Task {task.id} failed: {result.error_message}")
 
         task.completed_at = result.completed_at or datetime.utcnow()
 
-    except Exception:
+        # Save log file
+        log_file = agent_logger.save(
+            success=result.success,
+            puzzles_found=result.puzzles_found,
+            error_message=result.error_message,
+        )
+        logger.info(f"Agent log saved to {log_file}")
+
+    except Exception as e:
         logger.exception(f"Error processing task {task.id}")
+        agent_logger.exception("Unexpected error during agent execution", e)
         task.status = "failed"
         task.completed_at = datetime.utcnow()
+
+        # Save log file with error
+        log_file = agent_logger.save(
+            success=False,
+            error_message=str(e),
+        )
+        logger.info(f"Agent error log saved to {log_file}")
+
+    finally:
+        # Remove handler
+        root_logger.removeHandler(log_handler)
 
     db.commit()
 

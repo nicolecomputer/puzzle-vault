@@ -26,12 +26,13 @@ class NullAgent(BaseAgent):
         # Parse config
         config = NullConfig.model_validate_json(source.agent_config or "{}")
 
-        message = f"🔵 Null agent is alive! Running for source: {source.name}"
-        if config.extra_string:
-            message += f" - Extra: {config.extra_string}"
+        logger.info(f"🔵 Null agent running for source: {source.name}")
 
-        logger.info(message)
-        print(message)
+        if config.extra_string:
+            logger.info(f"Extra config string: {config.extra_string}")
+
+        logger.info("Null agent does nothing - this is a test agent")
+        logger.info("No puzzles will be fetched")
 
         return FetchResult(
             success=True,
