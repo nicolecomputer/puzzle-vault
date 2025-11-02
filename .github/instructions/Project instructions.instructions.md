@@ -55,7 +55,11 @@ Additionally, each source folder can contain:
 
 3. **Success**: If import succeeds:
    - Puzzle is added to the database with a generated UUID
-   - Both files are moved to `puzzles/` and renamed to `{puzzle_uuid}.puz` and `{puzzle_uuid}.meta.json`
+   - Both files are moved to `puzzles/` and renamed to date-based filenames:
+     - `{puzzle_date}.puz` and `{puzzle_date}.meta.json` (e.g., `2020-12-21.puz`)
+     - If a puzzle with the same date already exists, a counter is appended (e.g., `2020-12-21-2.puz`, `2020-12-21-3.puz`)
+   - The filename (without path) is stored in the puzzle's `filename` field
+   - Preview images use the same naming scheme (e.g., `2020-12-21.preview.png`)
 
 4. **Failure**: If import fails:
    - Both files are moved to `errors/` and renamed with timestamp: `{filename}_{timestamp}.puz` and `{filename}_{timestamp}.meta.json`

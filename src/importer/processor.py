@@ -139,6 +139,7 @@ class FileProcessor:
                 author=author,
                 puzzle_date=date.fromisoformat(puzzle_date),
                 file_path="",  # Will be set after moving the file
+                filename="",  # Will be set after moving the file
                 file_hash=file_hash,
             )
 
@@ -148,27 +149,54 @@ class FileProcessor:
 
             logger.info(f"Created puzzle {puzzle.id}: {title} ({puzzle_date})")
 
-            final_path = self._move_to_puzzles(
-                folder_name, puz_file, meta_file, puzzle.id
+            final_path, filename = self._move_to_puzzles(
+                folder_name, puz_file, meta_file, puzzle.id, puzzle_date
             )
 
-            # Update the puzzle with the final file path
+            # Update the puzzle with the final file path and filename
             puzzle.file_path = str(final_path)
+            puzzle.filename = filename
             db.commit()
 
         finally:
             db.close()
 
     def _move_to_puzzles(
-        self, folder_name: str, puz_file: Path, meta_file: Path, puzzle_id: str
-    ) -> Path:
-        """Move successfully processed files to puzzles/ directory."""
+        self,
+        folder_name: str,
+        puz_file: Path,
+        meta_file: Path,
+        puzzle_id: str,
+        puzzle_date: str,
+    ) -> tuple[Path, str]:
+        """Move successfully processed files to puzzles/ directory.
+
+        Returns:
+            A tuple of (final_puz_path, filename) where filename is just the basename
+        """
         puzzles_dir = self.data_dir / folder_name / "puzzles"
         puzzles_dir.mkdir(parents=True, exist_ok=True)
 
-        dest_puz = puzzles_dir / f"{puzzle_id}.puz"
-        dest_meta = puzzles_dir / f"{puzzle_id}.meta.json"
-        dest_preview = puzzles_dir / f"{puzzle_id}.preview.png"
+        # Generate date-based filename
+        base_filename = puzzle_date
+        counter = 1
+
+        # Find the next available filename
+        while True:
+            if counter == 1:
+                filename = f"{base_filename}.puz"
+            else:
+                filename = f"{base_filename}-{counter}.puz"
+
+            dest_puz = puzzles_dir / filename
+            if not dest_puz.exists():
+                break
+            counter += 1
+
+        # Derive other filenames from the base
+        filename_stem = Path(filename).stem
+        dest_meta = puzzles_dir / f"{filename_stem}.meta.json"
+        dest_preview = puzzles_dir / f"{filename_stem}.preview.png"
 
         shutil.move(str(puz_file), str(dest_puz))
         shutil.move(str(meta_file), str(dest_meta))
@@ -179,9 +207,9 @@ class FileProcessor:
         except Exception as e:
             logger.warning(f"Failed to generate preview image: {e}")
 
-        logger.info(f"Moved files to {puzzles_dir}")
+        logger.info(f"Moved files to {puzzles_dir} as {filename}")
 
-        return dest_puz
+        return dest_puz, filename
 
     def _move_to_errors(
         self, folder_name: str, puz_file: Path, meta_file: Path, error_msg: str

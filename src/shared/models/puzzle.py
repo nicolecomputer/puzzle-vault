@@ -34,6 +34,7 @@ class Puzzle(Base):
     author: Mapped[str] = mapped_column(String, nullable=True)
     puzzle_date: Mapped[date] = mapped_column(Date, nullable=True)
     file_path: Mapped[str] = mapped_column(String, nullable=False)
+    filename: Mapped[str] = mapped_column(String, nullable=True)
     file_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
@@ -49,6 +50,9 @@ class Puzzle(Base):
             Path to the preview image file
         """
         puz_path = Path(self.file_path)
+        if self.filename:
+            preview_filename = Path(self.filename).stem + ".preview.png"
+            return puz_path.parent / preview_filename
         return puz_path.parent / f"{self.id}.preview.png"
 
     def has_preview(self) -> bool:

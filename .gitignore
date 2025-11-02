@@ -77,7 +77,7 @@ config/*
 !config/README.md
 
 # Data directory
-data/
+data*/
 
 test-data/
 
