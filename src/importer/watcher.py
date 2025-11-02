@@ -70,8 +70,6 @@ class ImportScanner:
                 if not self._running:
                     break
 
-                logger.info("Scanning import directories...")
                 self.processor.process_all()
-                logger.info("Scan complete")
             except Exception as e:
                 logger.exception(f"Error during scan: {e}")
