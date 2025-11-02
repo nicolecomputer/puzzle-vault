@@ -1,30 +1,30 @@
 .PHONY: dev start db-migrate db-makemigration db-seed db-reset test format lint typecheck import
 
 dev:
-	uv run uvicorn src.web.main:app --reload --host 0.0.0.0 --port 8000
+	DATA_PATH=./data uv run uvicorn src.web.main:app --reload --host 0.0.0.0 --port 8000
 
 start:
-	uv run uvicorn src.web.main:app --host 0.0.0.0 --port 8000
+	DATA_PATH=/data uv run uvicorn src.web.main:app --host 0.0.0.0 --port 8000
 
 import:
-	uv run python -m src.importer.processor
+	DATA_PATH=./data uv run python -m src.importer.processor
 
 db-migrate:
-	uv run alembic upgrade head
+	DATA_PATH=./data uv run alembic upgrade head
 
 db-makemigration:
 	@if [ -z "$(msg)" ]; then \
 		echo "Error: Migration message required. Usage: make db-makemigration msg=\"your message\""; \
 		exit 1; \
 	fi
-	uv run alembic revision --autogenerate -m "$(msg)"
+	DATA_PATH=./data uv run alembic revision --autogenerate -m "$(msg)"
 
 db-seed:
-	uv run python -m scripts.seed_data
+	DATA_PATH=./data uv run python -m scripts.seed_data
 
 db-reset:
-	uv run python -m scripts.reset_db
-	uv run python -m scripts.seed_data
+	DATA_PATH=./data uv run python -m scripts.reset_db
+	DATA_PATH=./data uv run python -m scripts.seed_data
 
 test:
 	uv run pytest -v

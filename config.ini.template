@@ -1,0 +1,10 @@
+# Puz-Feed Configuration
+# This file was auto-generated from config.ini.template
+
+[session]
+# Session secret key for encrypting session cookies
+# This was auto-generated - keep it secret!
+secret_key = {secret_key}
+
+# Session timeout in seconds (default: 3600 = 1 hour)
+max_age = 3600
