@@ -204,6 +204,14 @@ async def source_detail(
 
     feed_identifier = source.short_code if source.short_code else source.id
 
+    # Get the latest agent run
+    latest_run = (
+        db.query(AgentTask)
+        .filter(AgentTask.source_id == id)
+        .order_by(AgentTask.queued_at.desc())
+        .first()
+    )
+
     templates = get_templates()
     return templates.TemplateResponse(
         "source_detail.html",
@@ -219,6 +227,7 @@ async def source_detail(
             "source_id": id,
             "page": validated_page,
             "total_pages": total_pages,
+            "latest_run": latest_run,
         },
     )
 
@@ -277,7 +286,10 @@ async def agent_detail(
 @web_ui_router.post("/agents/run")
 @require_auth
 async def enqueue_agent_run(
-    request: Request, source_id: str = Form(...), db: Session = Depends(get_db)
+    request: Request,
+    source_id: str = Form(...),
+    return_url: str = Form(None),
+    db: Session = Depends(get_db),
 ) -> StarletteResponse:
     """Enqueue an agent run for a source."""
     source = db.query(Source).filter(Source.id == source_id).first()
@@ -291,7 +303,9 @@ async def enqueue_agent_run(
     db.add(task)
     db.commit()
 
-    return RedirectResponse(url=f"/sources/{source_id}/agent", status_code=303)
+    # Redirect to return_url if provided, otherwise to agent page
+    redirect_url = return_url if return_url else f"/sources/{source_id}/agent"
+    return RedirectResponse(url=redirect_url, status_code=303)
 
 
 @web_ui_router.get("/agents/runs/{run_id}", response_class=HTMLResponse)
