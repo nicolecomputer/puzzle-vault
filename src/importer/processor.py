@@ -7,13 +7,13 @@ import shutil
 from datetime import date, datetime
 from pathlib import Path
 
-import puz
+import puz  # type: ignore[import]
 
-from src.config import settings
-from src.database import SessionLocal
-from src.importers.image_utils import generate_preview_image
-from src.models.puzzle import Puzzle
-from src.models.source import Source
+from src.importer.image_utils import generate_preview_image
+from src.shared.config import settings
+from src.shared.database import SessionLocal
+from src.shared.models.puzzle import Puzzle
+from src.shared.models.source import Source
 
 logger = logging.getLogger(__name__)
 

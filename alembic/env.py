@@ -3,15 +3,15 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from src.config import settings
+from src.shared.config import settings
 
 # Import our database configuration
-from src.database import Base
-from src.models.puzzle import Puzzle  # noqa: F401
-from src.models.source import Source  # noqa: F401
+from src.shared.database import Base
+from src.shared.models.puzzle import Puzzle  # noqa: F401
+from src.shared.models.source import Source  # noqa: F401
 
 # Import all models so they're registered with Base.metadata
-from src.models.user import User  # noqa: F401
+from src.shared.models.user import User  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

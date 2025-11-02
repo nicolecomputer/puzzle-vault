@@ -1,13 +1,13 @@
 .PHONY: dev start db-migrate db-makemigration db-seed db-reset test format lint typecheck import
 
 dev:
-	uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+	uv run uvicorn src.web.main:app --reload --host 0.0.0.0 --port 8000
 
 start:
-	uv run uvicorn src.main:app --host 0.0.0.0 --port 8000
+	uv run uvicorn src.web.main:app --host 0.0.0.0 --port 8000
 
 import:
-	uv run python -m src.importers.processor
+	uv run python -m src.importer.processor
 
 db-migrate:
 	uv run alembic upgrade head

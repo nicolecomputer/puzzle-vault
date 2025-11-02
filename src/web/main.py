@@ -5,9 +5,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from src.config import settings
-from src.routers.feed_router import feed_router
-from src.routers.web_ui_router import web_ui_router
+from src.shared.config import settings
+from src.web.routers.feed_router import feed_router
+from src.web.routers.web_ui_router import web_ui_router
 
 app = FastAPI()
 
@@ -19,9 +19,9 @@ app.add_middleware(
 
 CACHE_BUSTER = str(int(time.time()))
 
-templates = Jinja2Templates(directory="src/templates")
+templates = Jinja2Templates(directory="src/web/templates")
 templates.env.globals["cache_buster"] = CACHE_BUSTER
-app.mount("/static", StaticFiles(directory="src/templates"), name="static")
+app.mount("/static", StaticFiles(directory="src/web/templates"), name="static")
 
 # Include all routes from routers
 app.include_router(web_ui_router)

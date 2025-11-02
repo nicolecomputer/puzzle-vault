@@ -10,10 +10,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Date, DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
+from src.shared.database import Base
 
 if TYPE_CHECKING:
-    from src.models.source import Source
+    from src.shared.models.source import Source
 
 
 class Puzzle(Base):

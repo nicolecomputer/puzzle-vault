@@ -8,21 +8,21 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
-from src.auth import get_user_from_session, require_auth, verify_password
-from src.database import get_db
-from src.feed_utils import paginate_items, sort_puzzles_by_date
-from src.models.puzzle import Puzzle
-from src.models.source import Source
-from src.models.user import User
-from src.pagination_utils import paginate
-from src.source_utils import normalize_short_code
+from src.web.auth import get_user_from_session, require_auth, verify_password
+from src.shared.database import get_db
+from src.web.feed_utils import paginate_items, sort_puzzles_by_date
+from src.shared.models.puzzle import Puzzle
+from src.shared.models.source import Source
+from src.shared.models.user import User
+from src.web.pagination_utils import paginate
+from src.web.source_utils import normalize_short_code
 
 web_ui_router = APIRouter()
 
 
 def get_templates() -> Jinja2Templates:
     """Get templates instance from main app."""
-    from src.main import templates  # type: ignore[attr-defined]
+    from src.web.main import templates  # type: ignore[attr-defined]
 
     return templates
 

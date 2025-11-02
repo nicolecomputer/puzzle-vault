@@ -10,10 +10,10 @@ from fastapi.responses import RedirectResponse
 from passlib.hash import pbkdf2_sha256  # type: ignore
 from sqlalchemy.orm import Session
 
-from src.database import get_db
-from src.models.puzzle import Puzzle
-from src.models.source import Source
-from src.models.user import User
+from src.shared.database import get_db
+from src.shared.models.puzzle import Puzzle
+from src.shared.models.source import Source
+from src.shared.models.user import User
 
 
 def require_auth(func: Callable[..., Any]) -> Callable[..., Any]:

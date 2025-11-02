@@ -1,9 +1,9 @@
 """Utilities for building JSON feeds and managing feed data."""
 
-from src.feed_types import PuzzleCastFeed, PuzzleCastItem
-from src.models.puzzle import Puzzle
-from src.models.source import Source
-from src.pagination_utils import paginate
+from src.web.feed_types import PuzzleCastFeed, PuzzleCastItem
+from src.shared.models.puzzle import Puzzle
+from src.shared.models.source import Source
+from src.web.pagination_utils import paginate
 
 
 def sort_puzzles_by_date(puzzles: list[Puzzle]) -> list[Puzzle]:

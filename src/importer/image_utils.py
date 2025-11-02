@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import puz
+import puz  # type: ignore[import]
 from PIL import Image, ImageDraw
 
 

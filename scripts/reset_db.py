@@ -2,11 +2,11 @@
 
 import shutil
 
-from src.config import settings
-from src.database import Base, engine
-from src.models.puzzle import Puzzle  # noqa: F401
-from src.models.source import Source  # noqa: F401
-from src.models.user import User  # noqa: F401
+from src.shared.config import settings
+from src.shared.database import Base, engine
+from src.shared.models.puzzle import Puzzle  # noqa: F401
+from src.shared.models.source import Source  # noqa: F401
+from src.shared.models.user import User  # noqa: F401
 
 
 def reset_database() -> None:

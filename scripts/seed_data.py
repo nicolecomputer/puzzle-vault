@@ -6,11 +6,11 @@ Run with: pipenv run seed-data
 
 from sqlalchemy.orm import Session
 
-from src.auth import hash_password
-from src.config import settings
-from src.database import SessionLocal
-from src.models.source import Source
-from src.models.user import User
+from src.web.auth import hash_password
+from src.shared.config import settings
+from src.shared.database import SessionLocal
+from src.shared.models.source import Source
+from src.shared.models.user import User
 
 
 def seed_users(db: Session) -> None:

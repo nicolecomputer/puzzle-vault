@@ -9,9 +9,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.config import settings
-from src.database import SessionLocal
-from src.models.source import Source
+from src.shared.config import settings
+from src.shared.database import SessionLocal
+from src.shared.models.source import Source
 
 
 def main() -> None:

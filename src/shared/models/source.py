@@ -11,11 +11,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, String, event
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
-from src.database import Base
+from src.shared.database import Base
 
 if TYPE_CHECKING:
-    from src.models.puzzle import Puzzle
-    from src.models.user import User
+    from src.shared.models.puzzle import Puzzle
+    from src.shared.models.user import User
 
 
 class Source(Base):
@@ -49,7 +49,7 @@ class Source(Base):
     @property
     def has_icon(self) -> bool:
         """Check if icon.png exists for this source."""
-        from src.config import settings
+        from src.shared.config import settings
 
         icon_path = settings.puzzles_path / self.folder_name / "icon.png"
         return icon_path.exists()
@@ -89,7 +89,7 @@ def create_source_folders_on_insert(
     mapper: object, connection: object, target: Source
 ) -> None:
     """Automatically create folder structure when a source is inserted."""
-    from src.config import settings
+    from src.shared.config import settings
 
     target.create_folders(settings.puzzles_path)
 
@@ -99,7 +99,7 @@ def delete_source_folders_on_delete(
     mapper: object, connection: object, target: Source
 ) -> None:
     """Automatically delete folder structure when a source is deleted."""
-    from src.config import settings
+    from src.shared.config import settings
 
     source_path = settings.puzzles_path / target.folder_name
     if source_path.exists():
