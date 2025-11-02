@@ -8,13 +8,14 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
-from src.auth import require_auth, verify_password
+from src.auth import get_user_from_session, require_auth, verify_password
 from src.database import get_db
 from src.feed_utils import paginate_items, sort_puzzles_by_date
 from src.models.puzzle import Puzzle
 from src.models.source import Source
 from src.models.user import User
 from src.pagination_utils import paginate
+from src.source_utils import normalize_short_code
 
 web_ui_router = APIRouter()
 
@@ -24,46 +25,6 @@ def get_templates() -> Jinja2Templates:
     from src.main import templates  # type: ignore[attr-defined]
 
     return templates
-
-
-def get_user_from_session(request: Request, db: Session) -> User:
-    """Get authenticated user from session.
-
-    Args:
-        request: The request with session data
-        db: Database session
-
-    Returns:
-        Authenticated User
-
-    Raises:
-        HTTPException: If user not found
-    """
-    user_id = request.session.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-
-    return user
-
-
-def normalize_short_code(short_code: str | None) -> str | None:
-    """Normalize a short code by stripping whitespace.
-
-    Args:
-        short_code: The short code to normalize
-
-    Returns:
-        Normalized short code or None if empty
-    """
-    if not short_code:
-        return None
-
-    short_code = short_code.strip()
-    return short_code if short_code else None
 
 
 @web_ui_router.get("/", response_class=HTMLResponse)

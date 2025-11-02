@@ -7,7 +7,7 @@ from typing import Any, cast
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from passlib.hash import pbkdf2_sha256
+from passlib.hash import pbkdf2_sha256  # type: ignore
 from sqlalchemy.orm import Session
 
 from src.database import get_db
@@ -136,3 +136,27 @@ def user_has_puzzle_access(user: User, puzzle: Puzzle) -> bool:
     """
     source_ids = {src.id for src in user.sources}
     return puzzle.source_id in source_ids
+
+
+def get_user_from_session(request: Request, db: Session) -> User:
+    """Get authenticated user from session.
+
+    Args:
+        request: The request with session data
+        db: Database session
+
+    Returns:
+        Authenticated User
+
+    Raises:
+        HTTPException: If user not found
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
