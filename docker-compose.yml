@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  puzzle-vault:
+    build: .
+    image: puzzle-vault:latest
+    container_name: puzzle-vault
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=America/New_York # Set your timezone
+    volumes:
+      - ./data:/data # Mount local data directory to /data in container
+    restart: unless-stopped

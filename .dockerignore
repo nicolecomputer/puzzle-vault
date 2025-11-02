@@ -1,0 +1,43 @@
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+dist
+build
+
+# Virtual environments
+.venv
+venv
+ENV
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+.pytest_cache
+htmlcov
+.coverage
+.testmondata
+
+# Data directories (will be mounted)
+data0
+data
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+reference
+
+# Development configs
+.env
+config.ini
+Procfile.dev
