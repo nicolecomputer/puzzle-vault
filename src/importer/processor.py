@@ -23,6 +23,7 @@ class FileProcessor:
 
     def __init__(self):
         self.data_dir = settings.puzzles_path
+        self._unknown_folders_logged = set()
 
     @staticmethod
     def _calculate_file_hash(file_path: Path) -> str:
@@ -54,7 +55,9 @@ class FileProcessor:
                 source_id = source_lookup.get(folder_name)
 
                 if not source_id:
-                    logger.warning(f"Unknown source folder: {folder_name}")
+                    if folder_name not in self._unknown_folders_logged:
+                        logger.debug(f"Skipping unknown source folder: {folder_name}")
+                        self._unknown_folders_logged.add(folder_name)
                     continue
 
                 imports_dir = source_dir / "import"
