@@ -220,6 +220,73 @@ async def new_source(request: Request) -> StarletteResponse:
     )
 
 
+@web_ui_router.get("/sources/new_custom", response_class=HTMLResponse)
+@require_auth
+async def new_source_custom(request: Request) -> StarletteResponse:
+    """Display form for creating a custom source."""
+    templates = get_templates()
+    username = request.session.get("username")
+    return templates.TemplateResponse(
+        "new_source_custom.html", {"request": request, "username": username}
+    )
+
+
+@web_ui_router.post("/sources/preset", response_class=HTMLResponse)
+@require_auth
+async def create_preset_source(
+    request: Request,
+    agent_type: str = Form(...),
+    preset_data: str = Form(...),
+    db: Session = Depends(get_db),
+) -> StarletteResponse:
+    """Create a new source from a preset configuration."""
+    import json
+
+    user = get_user_from_session(request, db)
+    username = request.session.get("username")
+
+    # Parse the preset data
+    preset = json.loads(preset_data)
+
+    normalized_short_code = normalize_short_code(preset.get("short_code"))
+
+    # Auto-enable 3-hour schedule for preset agents
+    schedule_enabled = True
+    schedule_interval_hours = 3
+
+    # Convert preset config to JSON string if it exists
+    agent_config = None
+    if "config" in preset and preset["config"]:
+        agent_config = json.dumps(preset["config"])
+
+    source = Source(
+        name=preset["name"],
+        user_id=user.id,
+        short_code=normalized_short_code,
+        timezone=None,
+        agent_type=agent_type,
+        agent_config=agent_config,
+        agent_enabled=True,
+        schedule_enabled=schedule_enabled,
+        schedule_interval_hours=schedule_interval_hours,
+    )
+    db.add(source)
+    db.commit()
+    db.refresh(source)
+
+    # Queue an immediate first run
+    from datetime import datetime
+
+    from src.shared.models.agent_task import AgentTask
+
+    task = AgentTask(source_id=source.id, status="pending")
+    db.add(task)
+    source.last_scheduled_run_at = datetime.utcnow()
+    db.commit()
+
+    return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
+
+
 @web_ui_router.post("/sources", response_class=HTMLResponse)
 @require_auth
 async def create_source(

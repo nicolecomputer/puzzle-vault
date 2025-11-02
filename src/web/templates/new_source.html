@@ -6,180 +6,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add New Source</title>
     <link rel="stylesheet" href="/static/css/base.css?v={{ cache_buster }}">
+    <link rel="stylesheet" href="/static/css/sources.css?v={{ cache_buster }}">
     <style>
-        h1 {
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 2rem;
         }
 
-        .presets-section {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--color-bg-light);
+        .page-header h1 {
+            margin: 0;
+        }
+
+        .sources-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .custom-section {
+            margin-top: 2rem;
+        }
+
+        .source-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border: 1px solid var(--color-border);
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
             border-radius: 8px;
         }
 
-        .presets-section h2 {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-        }
-
-        .preset-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-
-        .preset-card {
-            padding: 1rem;
-            background: white;
-            border: 2px solid var(--color-border);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .preset-card:hover:not(.preset-taken) {
+        .source-item:hover {
+            background: var(--color-bg-light);
             border-color: var(--color-primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .preset-card.preset-taken {
+        .source-item.disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .source-item.disabled:hover {
             border-color: var(--color-border);
         }
 
-        .preset-card h3 {
-            font-size: 1rem;
-            margin-bottom: 0.25rem;
+        .source-icon {
+            width: 48px;
+            height: 48px;
+            margin-right: 1rem;
+            flex-shrink: 0;
         }
 
-        .preset-card .preset-agent {
-            font-size: 0.85rem;
-            color: var(--color-text-muted);
-            margin-bottom: 0.5rem;
-        }
-
-        .preset-card .preset-status {
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .preset-card.preset-taken .preset-status {
-            color: var(--color-success);
-        }
-
-        .preset-card:not(.preset-taken) .preset-status {
-            color: var(--color-primary);
-        }
-
-        .divider {
-            margin: 2rem 0;
-            text-align: center;
-            position: relative;
-        }
-
-        .divider::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
+        .source-icon img {
             width: 100%;
-            height: 1px;
-            background: var(--color-border);
+            height: 100%;
+            border-radius: 8px;
+            object-fit: cover;
         }
 
-        .divider span {
-            background: white;
-            padding: 0 1rem;
-            position: relative;
-            color: var(--color-text-muted);
-            font-size: 0.9rem;
-        }
-
-        .source-form {
+        .source-icon-placeholder {
+            width: 100%;
+            height: 100%;
+            background: var(--color-primary);
+            color: white;
             display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 8px;
         }
 
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .form-actions .btn-cancel,
-        .form-actions .btn-submit {
+        .source-info {
             flex: 1;
         }
 
-        .agent-config-fields {
-            display: none;
-            padding: 1rem;
-            background: var(--color-bg-light);
-            border-radius: 4px;
-            margin-top: 0.5rem;
-        }
-
-        .agent-config-fields.active {
-            display: block;
-        }
-
-        .form-group label {
-            font-size: 1.1rem;
+        .source-name {
             font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .source-updated {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+        }
+
+        .source-arrow {
+            font-size: 1.5rem;
+            color: var(--color-text-muted);
+        }
+
+        .source-item.custom-option {
+            background: var(--color-bg-light);
+            border: 2px dashed var(--color-border);
+        }
+
+        .source-item.custom-option:hover {
+            border-color: var(--color-primary);
+            background: white;
+            border-style: dashed;
+        }
+
+        .no-presets {
+            text-align: center;
+            padding: 2rem;
+            color: var(--color-text-muted);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--color-text-muted);
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>Add New Source</h1>
-
-        <div id="presets-section" class="presets-section" style="display: none;">
-            <h2>Quick Add Popular Sources</h2>
-            <div id="preset-cards" class="preset-cards"></div>
+        <div class="page-header">
+            <h1>Add New Source</h1>
         </div>
 
-        <div class="divider">
-            <span>or configure manually</span>
-        </div>
+        <div id="loading" class="loading">Loading available sources...</div>
 
-        <form class="source-form" method="post" action="/sources">
-            <div class="form-group">
-                <label for="name">Source Name</label>
-                <input type="text" id="name" name="name" required autofocus>
-            </div>
-            <div class="form-group">
-                <label for="short_code">Short Code (optional)</label>
-                <input type="text" id="short_code" name="short_code" pattern="[a-z0-9-]+"
-                    placeholder="e.g., nyt, wsj, latimes">
-                <small>
-                    Optional short code for folder names (lowercase letters, numbers, and hyphens only)
-                </small>
-            </div>
-            <div class="form-group">
-                <label for="agent_type">Agent Type</label>
-                <select id="agent_type" name="agent_type">
-                    <option value="">None (Manual Upload)</option>
-                </select>
-                <small>Select an agent to automatically fetch puzzles</small>
-            </div>
-            <div id="agent-config-container"></div>
-            <input type="hidden" id="agent_config" name="agent_config" value="">
-            <input type="hidden" name="agent_enabled" value="true">
-            <div class="form-actions">
-                <a href="/user/{{ username }}/sources" class="btn-cancel">Cancel</a>
-                <button type="submit" class="btn-submit">Create Source</button>
-            </div>
-        </form>
+        <div id="sources-list" class="sources-list" style="display: none;"></div>
     </div>
 
     <script>
         let agents = [];
-        let currentAgentType = null;
         let takenShortCodes = [];
 
         // Fetch available agents and user's existing short codes
@@ -189,157 +149,144 @@
         ]).then(([agentsData, shortCodesData]) => {
             agents = agentsData.agents;
             takenShortCodes = shortCodesData.short_codes;
-
-            const select = document.getElementById('agent_type');
-
-            agents.forEach(agent => {
-                const option = document.createElement('option');
-                option.value = agent.type;
-                option.textContent = agent.name;
-                select.appendChild(option);
-            });
-
-            renderPresets();
+            renderSourceOptions();
         });
 
-        function renderPresets() {
-            const presetsSection = document.getElementById('presets-section');
-            const presetsContainer = document.getElementById('preset-cards');
-            presetsContainer.innerHTML = '';
+        function renderSourceOptions() {
+            const loading = document.getElementById('loading');
+            const sourcesList = document.getElementById('sources-list');
 
-            let hasPresets = false;
+            loading.style.display = 'none';
+            sourcesList.style.display = 'flex';
+            sourcesList.innerHTML = '';
 
+            let presetCount = 0;
+
+            // Add preset options
             agents.forEach(agent => {
                 if (agent.presets && agent.presets.length > 0) {
-                    hasPresets = true;
                     agent.presets.forEach(preset => {
                         const isTaken = takenShortCodes.includes(preset.short_code);
-                        const card = document.createElement('div');
-                        card.className = 'preset-card' + (isTaken ? ' preset-taken' : '');
-
-                        const title = document.createElement('h3');
-                        title.textContent = preset.name;
-
-                        const agentInfo = document.createElement('div');
-                        agentInfo.className = 'preset-agent';
-                        agentInfo.textContent = `via ${agent.name}`;
-
-                        const status = document.createElement('div');
-                        status.className = 'preset-status';
-                        status.textContent = isTaken ? '✓ Already added' : 'Click to add';
-
-                        card.appendChild(title);
-                        card.appendChild(agentInfo);
-                        card.appendChild(status);
-
-                        if (!isTaken) {
-                            card.addEventListener('click', () => {
-                                applyPreset(agent, preset);
-                            });
-                        }
-
-                        presetsContainer.appendChild(card);
+                        const item = createSourceItem(agent, preset, isTaken);
+                        sourcesList.appendChild(item);
+                        presetCount++;
                     });
                 }
             });
 
-            if (hasPresets) {
-                presetsSection.style.display = 'block';
+            // Add custom option in a separate section
+            const customSection = document.createElement('div');
+            customSection.className = 'custom-section';
+
+            const customItem = document.createElement('a');
+            customItem.href = '/sources/new_custom';
+            customItem.className = 'source-item custom-option';
+
+            const customIcon = document.createElement('div');
+            customIcon.className = 'source-icon';
+            const customIconPlaceholder = document.createElement('div');
+            customIconPlaceholder.className = 'source-icon-placeholder';
+            customIconPlaceholder.textContent = '+';
+            customIcon.appendChild(customIconPlaceholder);
+
+            const customInfo = document.createElement('div');
+            customInfo.className = 'source-info';
+
+            const customName = document.createElement('div');
+            customName.className = 'source-name';
+            customName.textContent = 'Custom Source';
+
+            const customDesc = document.createElement('div');
+            customDesc.className = 'source-updated';
+            customDesc.textContent = 'Configure a source manually';
+
+            customInfo.appendChild(customName);
+            customInfo.appendChild(customDesc);
+
+            const customArrow = document.createElement('div');
+            customArrow.className = 'source-arrow';
+            customArrow.textContent = '→';
+
+            customItem.appendChild(customIcon);
+            customItem.appendChild(customInfo);
+            customItem.appendChild(customArrow);
+
+            customSection.appendChild(customItem);
+            sourcesList.appendChild(customSection);
+
+            if (presetCount === 0) {
+                const noPresets = document.createElement('div');
+                noPresets.className = 'no-presets';
+                noPresets.textContent = 'No preset sources available. Use the Custom option to create a source.';
+                sourcesList.insertBefore(noPresets, customItem);
             }
         }
 
-        function applyPreset(agent, preset) {
-            document.getElementById('name').value = preset.name;
-            document.getElementById('short_code').value = preset.short_code;
-            document.getElementById('agent_type').value = agent.type;
+        function createSourceItem(agent, preset, isTaken) {
+            const item = document.createElement('a');
+            item.className = 'source-item' + (isTaken ? ' disabled' : '');
 
-            const event = new Event('change');
-            document.getElementById('agent_type').dispatchEvent(event);
+            if (!isTaken) {
+                item.href = '#';
+                item.onclick = (e) => {
+                    e.preventDefault();
+                    addPresetSource(agent, preset);
+                };
+            }
 
-            setTimeout(() => {
-                Object.entries(preset.config).forEach(([key, value]) => {
-                    const input = document.getElementById(`config_${key}`);
-                    if (input) {
-                        input.value = value;
-                    }
-                });
+            const icon = document.createElement('div');
+            icon.className = 'source-icon';
+            const iconPlaceholder = document.createElement('div');
+            iconPlaceholder.className = 'source-icon-placeholder';
+            iconPlaceholder.textContent = preset.name[0].toUpperCase();
+            icon.appendChild(iconPlaceholder);
 
-                document.getElementById('name').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
+            const info = document.createElement('div');
+            info.className = 'source-info';
+
+            const name = document.createElement('div');
+            name.className = 'source-name';
+            name.textContent = preset.name;
+
+            const desc = document.createElement('div');
+            desc.className = 'source-updated';
+            desc.textContent = isTaken ? '✓ Already added' : `via ${agent.name}`;
+
+            info.appendChild(name);
+            info.appendChild(desc);
+
+            const arrow = document.createElement('div');
+            arrow.className = 'source-arrow';
+            arrow.textContent = '→';
+
+            item.appendChild(icon);
+            item.appendChild(info);
+            item.appendChild(arrow);
+
+            return item;
         }
 
-        // Handle agent type selection
-        document.getElementById('agent_type').addEventListener('change', function (e) {
-            const agentType = e.target.value;
-            const container = document.getElementById('agent-config-container');
+        async function addPresetSource(agent, preset) {
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/sources/preset';
 
-            container.innerHTML = '';
-            currentAgentType = agentType;
+            const agentTypeInput = document.createElement('input');
+            agentTypeInput.type = 'hidden';
+            agentTypeInput.name = 'agent_type';
+            agentTypeInput.value = agent.type;
+            form.appendChild(agentTypeInput);
 
-            if (!agentType) {
-                return;
-            }
+            const presetDataInput = document.createElement('input');
+            presetDataInput.type = 'hidden';
+            presetDataInput.name = 'preset_data';
+            presetDataInput.value = JSON.stringify(preset);
+            form.appendChild(presetDataInput);
 
-            const agent = agents.find(a => a.type === agentType);
-            if (!agent || !agent.config_schema.properties) {
-                return;
-            }
-
-            // Create form fields based on JSON schema
-            const configDiv = document.createElement('div');
-            configDiv.className = 'agent-config-fields active';
-
-            Object.entries(agent.config_schema.properties).forEach(([key, schema]) => {
-                const formGroup = document.createElement('div');
-                formGroup.className = 'form-group';
-
-                const label = document.createElement('label');
-                label.htmlFor = `config_${key}`;
-                label.textContent = schema.title || key;
-
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.id = `config_${key}`;
-                input.name = `config_${key}`;
-                input.dataset.configKey = key;
-
-                if (schema.default !== undefined) {
-                    input.value = schema.default;
-                }
-
-                if (schema.description) {
-                    const small = document.createElement('small');
-                    small.textContent = schema.description;
-                    formGroup.appendChild(label);
-                    formGroup.appendChild(input);
-                    formGroup.appendChild(small);
-                } else {
-                    formGroup.appendChild(label);
-                    formGroup.appendChild(input);
-                }
-
-                configDiv.appendChild(formGroup);
-            });
-
-            container.appendChild(configDiv);
-        });
-
-        // Build config JSON on submit
-        document.querySelector('.source-form').addEventListener('submit', function (e) {
-            if (!currentAgentType) {
-                return;
-            }
-
-            const configInputs = document.querySelectorAll('[data-config-key]');
-            const config = {};
-
-            configInputs.forEach(input => {
-                const key = input.dataset.configKey;
-                config[key] = input.value;
-            });
-
-            document.getElementById('agent_config').value = JSON.stringify(config);
-        });
+            document.body.appendChild(form);
+            form.submit();
+        }
     </script>
 </body>
 
