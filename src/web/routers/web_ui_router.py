@@ -8,12 +8,13 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
-from src.web.auth import get_user_from_session, require_auth, verify_password
 from src.shared.database import get_db
-from src.web.feed_utils import paginate_items, sort_puzzles_by_date
 from src.shared.models.puzzle import Puzzle
 from src.shared.models.source import Source
 from src.shared.models.user import User
+from src.shared.request_utils import get_base_url
+from src.web.auth import get_user_from_session, require_auth, verify_password
+from src.web.feed_utils import paginate_items, sort_puzzles_by_date
 from src.web.pagination_utils import paginate
 from src.web.source_utils import normalize_short_code
 
@@ -91,7 +92,7 @@ async def user_sources(
     per_page = 30
     sources, total_pages, validated_page = paginate(all_sources, page, per_page)
 
-    base_url = str(request.base_url).rstrip("/")
+    base_url = get_base_url(request)
 
     templates = get_templates()
     return templates.TemplateResponse(

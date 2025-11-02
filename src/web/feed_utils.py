@@ -1,8 +1,8 @@
 """Utilities for building JSON feeds and managing feed data."""
 
-from src.web.feed_types import PuzzleCastFeed, PuzzleCastItem
 from src.shared.models.puzzle import Puzzle
 from src.shared.models.source import Source
+from src.web.feed_types import PuzzleCastFeed, PuzzleCastItem
 from src.web.pagination_utils import paginate
 
 

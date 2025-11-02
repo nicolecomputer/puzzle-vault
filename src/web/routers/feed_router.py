@@ -8,17 +8,18 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
+from src.shared.config import settings
+from src.shared.database import get_db
+from src.shared.models.puzzle import Puzzle
+from src.shared.models.source import Source
+from src.shared.models.user import User
+from src.shared.request_utils import get_base_url
 from src.web.auth import (
     get_user_from_key,
     user_has_puzzle_access,
     user_has_source_access,
 )
-from src.shared.config import settings
-from src.shared.database import get_db
 from src.web.feed_utils import build_feed_data, paginate_items, sort_puzzles_by_date
-from src.shared.models.puzzle import Puzzle
-from src.shared.models.source import Source
-from src.shared.models.user import User
 
 feed_router = APIRouter()
 
@@ -28,18 +29,6 @@ def get_templates() -> Jinja2Templates:
     from src.web.main import templates  # type: ignore[attr-defined]
 
     return templates
-
-
-def get_base_url(request: Request) -> str:
-    """Get the base URL for the application.
-
-    Uses BASE_URL from config if set, otherwise falls back to request URL.
-    """
-    if settings.BASE_URL:
-        return settings.BASE_URL.rstrip("/")
-
-    # Fall back to request scheme and host
-    return f"{request.url.scheme}://{request.url.netloc}"
 
 
 @feed_router.get("/feeds/{id}.json")

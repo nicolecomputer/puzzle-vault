@@ -8,6 +8,7 @@ applyTo: '**'
 - Always make sure the code is formatted with `make format`
 - Always use the cache buster query parameter when linking to CSS files in HTML templates
 - All commands should be run through make
+- DO NOT automatically reset the database or delete data unless explicitly asked
 
 
 ## Testing
