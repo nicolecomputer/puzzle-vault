@@ -31,16 +31,10 @@
     gap: var(--spacing-lg);
 }
 
-.feed-link {
-    color: var(--color-primary);
-    text-decoration: underline;
-    font-weight: 400;
+.feed-url-container a {
     flex: 1;
     word-break: break-all;
-}
-
-.feed-link:hover {
-    color: var(--color-primary-hover);
+    text-decoration: underline;
 }
 
 /* Copy Button */
@@ -110,18 +104,6 @@
     text-align: center;
     color: var(--color-text-light);
     font-style: italic;
-}
-
-/* Puzzle Link */
-.puzzle-link {
-    color: var(--color-primary);
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.puzzle-link:hover {
-    color: var(--color-primary-hover);
-    text-decoration: underline;
 }
 
 /* Download Button */

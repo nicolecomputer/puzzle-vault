@@ -52,7 +52,7 @@
             <tr>
                 <td>
                     <div class="feed-url-container">
-                        <a href="{{ feed_url }}" class="feed-link">{{ feed_url }}</a>
+                        <a href="{{ feed_url }}">{{ feed_url }}</a>
                         <button class="copy-btn" onclick="copyFeedUrl()">Copy</button>
                     </div>
                 </td>
@@ -73,7 +73,7 @@
             {% for puzzle in puzzles %}
             <tr>
                 <td>
-                    <a href="/puzzles/{{ puzzle.id }}?key={{ feed_key }}" class="puzzle-link">
+                    <a href="/puzzles/{{ puzzle.id }}?key={{ feed_key }}">
                         {% if puzzle.puzzle_date %}{{ puzzle.puzzle_date.strftime('%b %d, %Y') }}{% else %}N/A{% endif
                         %}
                     </a>
