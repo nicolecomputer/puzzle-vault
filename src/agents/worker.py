@@ -122,6 +122,23 @@ async def worker_loop() -> None:
     """Main worker loop that polls for pending tasks."""
     logger.info("🚀 Agent worker starting...")
 
+    # Ensure agents folder exists
+    agents_path = settings.DATA_PATH / "agents"
+    agents_path.mkdir(parents=True, exist_ok=True)
+    logger.info(f"✓ Ensured agents folder exists: {agents_path}")
+
+    # Ensure folder structure exists for all agent-enabled sources
+    db = SessionLocal()
+    try:
+        sources = db.query(Source).filter(Source.agent_enabled).all()
+        for source in sources:
+            source.create_folders(settings.puzzles_path)
+            logger.info(f"✓ Ensured folder structure for source: {source.name}")
+    except Exception as e:
+        logger.exception(f"Error creating source folders: {e}")
+    finally:
+        db.close()
+
     while True:
         db = SessionLocal()
         try:
