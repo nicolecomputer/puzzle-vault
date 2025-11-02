@@ -11,6 +11,7 @@ import puz
 
 from src.config import settings
 from src.database import SessionLocal
+from src.importers.image_utils import generate_preview_image
 from src.models.puzzle import Puzzle
 from src.models.source import Source
 
@@ -162,9 +163,16 @@ class FileProcessor:
 
         dest_puz = puzzles_dir / f"{puzzle_id}.puz"
         dest_meta = puzzles_dir / f"{puzzle_id}.meta.json"
+        dest_preview = puzzles_dir / f"{puzzle_id}.preview.png"
 
         shutil.move(str(puz_file), str(dest_puz))
         shutil.move(str(meta_file), str(dest_meta))
+
+        try:
+            generate_preview_image(dest_puz, dest_preview)
+            logger.info(f"Generated preview image: {dest_preview.name}")
+        except Exception as e:
+            logger.warning(f"Failed to generate preview image: {e}")
 
         logger.info(f"Moved files to {puzzles_dir}")
 
