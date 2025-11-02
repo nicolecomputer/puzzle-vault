@@ -114,6 +114,11 @@ async def get_feed(
         "description": f"A Puzzlecast feed for source: {source.name}",
     }
 
+    # Add icon if it exists
+    icon_url = source.icon_url(base_url)
+    if icon_url:
+        feed_data["icon"] = icon_url
+
     # Add next_url if there are more pages
     if page < total_pages:
         feed_data["next_url"] = (
@@ -252,4 +257,28 @@ async def puzzle_detail(
             "source": source,
             "feed_key": key,
         },
+    )
+
+
+@feed_router.get("/sources/{folder_name}/icon.png", response_class=FileResponse)
+async def get_source_icon(
+    folder_name: str, db: Session = Depends(get_db)
+) -> StarletteResponse:
+    """Get a source icon file (public, no authentication required)."""
+    # Find the source by folder_name (could be short_code or UUID)
+    source = db.query(Source).filter(Source.short_code == folder_name).first()
+    if not source:
+        source = db.query(Source).filter(Source.id == folder_name).first()
+
+    if not source:
+        return JSONResponse({"error": "Source not found"}, status_code=404)
+
+    icon_path = settings.puzzles_path / source.folder_name / "icon.png"
+    if not icon_path.exists():
+        return JSONResponse({"error": "Icon not found"}, status_code=404)
+
+    return FileResponse(
+        path=icon_path,
+        media_type="image/png",
+        headers={"Content-Disposition": "inline"},
     )

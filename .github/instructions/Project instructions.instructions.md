@@ -19,6 +19,9 @@ Each source folder contains three subdirectories:
 - `puzzles/` - Successfully imported puzzles
 - `errors/` - Failed imports with error information
 
+Additionally, each source folder can contain:
+- `icon.png` - Optional source icon image (512x512px recommended) that appears in the JSON Feed
+
 ### Import Process Flow
 1. **Staging**: Puzzles are placed in the `import/` folder with two required files:
    - `{filename}.puz` - The crossword puzzle file in .puz format

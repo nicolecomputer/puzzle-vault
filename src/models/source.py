@@ -46,6 +46,20 @@ class Source(Base):
         """Return short_code if available, otherwise UUID."""
         return self.short_code if self.short_code else self.id
 
+    @property
+    def has_icon(self) -> bool:
+        """Check if icon.png exists for this source."""
+        from src.config import settings
+
+        icon_path = settings.puzzles_path / self.folder_name / "icon.png"
+        return icon_path.exists()
+
+    def icon_url(self, base_url: str) -> str | None:
+        """Return icon URL if icon exists, otherwise None."""
+        if not self.has_icon:
+            return None
+        return f"{base_url}/sources/{self.folder_name}/icon.png"
+
     def create_folders(self, base_path: Path) -> None:
         """Create the folder structure for this source."""
         source_path = base_path / self.folder_name
