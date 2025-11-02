@@ -8,10 +8,6 @@ Create Date: 2025-10-29 14:23:21.017454
 
 from collections.abc import Sequence
 
-import sqlalchemy as sa
-
-from alembic import op
-
 # revision identifiers, used by Alembic.
 revision: str = "8f6ea8f5068d"
 down_revision: str | Sequence[str] | None = "0a76538b3133"
@@ -21,11 +17,13 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    with op.batch_alter_table("sources", schema=None) as batch_op:
-        batch_op.drop_column("url")
+    # This migration is a no-op because the url column was never added to sources.
+    # The initial_schema (c338b408fa30) created sources without a url column.
+    # This migration is kept for migration chain continuity.
+    pass
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    with op.batch_alter_table("sources", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("url", sa.VARCHAR(), nullable=False))
+    # This migration is a no-op, so downgrade does nothing
+    pass

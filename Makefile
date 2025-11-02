@@ -1,10 +1,8 @@
 .PHONY: dev start db-migrate db-makemigration db-seed db-reset test format lint typecheck import run-agent-worker
 
 dev:
-	DATA_PATH=./data uv run honcho start
+	DATA_PATH=./data uv run honcho start -f Procfile.dev
 
-start:
-	DATA_PATH=/data uv run honcho start
 
 import:
 	DATA_PATH=./data uv run python -m src.importer.main
