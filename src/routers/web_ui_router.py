@@ -1,18 +1,20 @@
-"""Route handlers for the puz-feed application."""
+"""Route handlers for the web UI."""
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.responses import Response as StarletteResponse
 
 from src.auth import require_auth, verify_password
 from src.database import get_db
+from src.feed_utils import paginate_items, sort_puzzles_by_date
 from src.models.puzzle import Puzzle
 from src.models.source import Source
 from src.models.user import User
+from src.pagination_utils import paginate
 
 web_ui_router = APIRouter()
 
@@ -22,6 +24,46 @@ def get_templates() -> Jinja2Templates:
     from src.main import templates  # type: ignore[attr-defined]
 
     return templates
+
+
+def get_user_from_session(request: Request, db: Session) -> User:
+    """Get authenticated user from session.
+
+    Args:
+        request: The request with session data
+        db: Database session
+
+    Returns:
+        Authenticated User
+
+    Raises:
+        HTTPException: If user not found
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
+
+
+def normalize_short_code(short_code: str | None) -> str | None:
+    """Normalize a short code by stripping whitespace.
+
+    Args:
+        short_code: The short code to normalize
+
+    Returns:
+        Normalized short code or None if empty
+    """
+    if not short_code:
+        return None
+
+    short_code = short_code.strip()
+    return short_code if short_code else None
 
 
 @web_ui_router.get("/", response_class=HTMLResponse)
@@ -76,24 +118,21 @@ async def user_sources(
     request: Request, id: str, page: int = 1, db: Session = Depends(get_db)
 ) -> StarletteResponse:
     """Display user's available sources."""
-    templates = get_templates()
-    user_id = request.session.get("user_id")
+    user = get_user_from_session(request, db)
+
+    query = db.query(Source).filter(Source.user_id == user.id)
+    all_sources = query.all()
 
     per_page = 30
-    offset = (page - 1) * per_page
+    sources, total_pages, validated_page = paginate(all_sources, page, per_page)
 
-    query = db.query(Source).filter(Source.user_id == user_id)
-    total_sources = query.count()
-    sources = query.offset(offset).limit(per_page).all()
-
-    total_pages = (total_sources + per_page - 1) // per_page
-
+    templates = get_templates()
     return templates.TemplateResponse(
         "user_sources.html",
         {
             "request": request,
             "sources": sources,
-            "page": page,
+            "page": validated_page,
             "total_pages": total_pages,
             "user_id": id,
         },
@@ -119,16 +158,13 @@ async def create_source(
     short_code: str | None = Form(None),
     db: Session = Depends(get_db),
 ) -> StarletteResponse:
-    """Create a new source and redirect to puzzles page."""
-    user_id = request.session.get("user_id")
+    """Create a new source and redirect to sources page."""
+    user = get_user_from_session(request, db)
     username = request.session.get("username")
 
-    if short_code:
-        short_code = short_code.strip()
-        if short_code == "":
-            short_code = None
+    normalized_short_code = normalize_short_code(short_code)
 
-    source = Source(name=name, user_id=user_id, short_code=short_code)
+    source = Source(name=name, user_id=user.id, short_code=normalized_short_code)
     db.add(source)
     db.commit()
 
@@ -141,51 +177,35 @@ async def source_detail(
     request: Request, id: str, page: int = 1, db: Session = Depends(get_db)
 ) -> StarletteResponse:
     """Display source information page."""
-    user_id = request.session.get("user_id")
-    user = db.query(User).filter(User.id == user_id).first()
-    feed_key = str(user.feed_key) if user else ""
+    user = get_user_from_session(request, db)
 
     source = db.query(Source).filter(Source.id == id).first()
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
 
-    if source:
-        source_name = source.name
-        total_puzzles = len(source.puzzles)
-        all_puzzles = sorted(
-            source.puzzles, key=lambda p: p.puzzle_date or p.created_at, reverse=True
-        )
-        latest_puzzle_date = all_puzzles[0].puzzle_date if all_puzzles else None
+    all_puzzles = sort_puzzles_by_date(source.puzzles)
+    per_page = 30
+    puzzles, total_pages, validated_page = paginate_items(all_puzzles, page, per_page)
 
-        # Pagination
-        per_page = 30
-        offset = (page - 1) * per_page
-        puzzles = all_puzzles[offset : offset + per_page]
-        total_pages = (total_puzzles + per_page - 1) // per_page
-    else:
-        source_name = "Unknown"
-        total_puzzles = 0
-        puzzles = []
-        latest_puzzle_date = None
-        total_pages = 0
-
-    # Use short_code if available, otherwise use UUID
-    feed_identifier = source.short_code if source and source.short_code else id
-
-    feed_data = {
-        "request": request,
-        "source_title": source_name,
-        "latest_puzzle_date": latest_puzzle_date or "N/A",
-        "total_puzzles": total_puzzles,
-        "errors": 0,
-        "feed_url": f"/feeds/{feed_identifier}.json?key={feed_key}",
-        "feed_key": feed_key,
-        "puzzles": puzzles,
-        "source_id": id,
-        "page": page,
-        "total_pages": total_pages,
-    }
+    feed_identifier = source.short_code if source.short_code else source.id
 
     templates = get_templates()
-    return templates.TemplateResponse("source_detail.html", feed_data)
+    return templates.TemplateResponse(
+        "source_detail.html",
+        {
+            "request": request,
+            "source_title": source.name,
+            "latest_puzzle_date": all_puzzles[0].puzzle_date if all_puzzles else "N/A",
+            "total_puzzles": len(all_puzzles),
+            "errors": 0,
+            "feed_url": f"/feeds/{feed_identifier}.json?key={user.feed_key}",
+            "feed_key": str(user.feed_key),
+            "puzzles": puzzles,
+            "source_id": id,
+            "page": validated_page,
+            "total_pages": total_pages,
+        },
+    )
 
 
 @web_ui_router.get("/puzzles/{puzzle_id}/download", response_class=FileResponse)
@@ -195,13 +215,12 @@ async def download_puzzle(
 ) -> StarletteResponse:
     """Download a puzzle file."""
     puzzle = db.query(Puzzle).filter(Puzzle.id == puzzle_id).first()
-
     if not puzzle:
-        return JSONResponse({"error": "Puzzle not found"}, status_code=404)
+        raise HTTPException(status_code=404, detail="Puzzle not found")
 
     file_path = Path(puzzle.file_path)
     if not file_path.exists():
-        return JSONResponse({"error": "Puzzle file not found"}, status_code=404)
+        raise HTTPException(status_code=404, detail="Puzzle file not found")
 
     return FileResponse(
         path=file_path,

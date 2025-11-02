@@ -3,6 +3,7 @@
 from src.feed_types import PuzzleCastFeed, PuzzleCastItem
 from src.models.puzzle import Puzzle
 from src.models.source import Source
+from src.pagination_utils import paginate
 
 
 def sort_puzzles_by_date(puzzles: list[Puzzle]) -> list[Puzzle]:
@@ -26,26 +27,17 @@ def sort_puzzles_by_date(puzzles: list[Puzzle]) -> list[Puzzle]:
 def paginate_items(
     items: list[Puzzle], page: int, per_page: int = 50
 ) -> tuple[list[Puzzle], int, int]:
-    """Paginate a list of items.
+    """Paginate a list of puzzles.
 
     Args:
-        items: List of items to paginate
+        items: List of puzzles to paginate
         page: Current page number (1-indexed)
         per_page: Number of items per page
 
     Returns:
         Tuple of (paginated_items, total_pages, validated_page)
     """
-    total = len(items)
-    total_pages = (total + per_page - 1) // per_page if total > 0 else 1
-
-    # Validate page number
-    validated_page = max(1, min(page, total_pages))
-
-    offset = (validated_page - 1) * per_page
-    paginated = items[offset : offset + per_page]
-
-    return paginated, total_pages, validated_page
+    return paginate(items, page, per_page)
 
 
 def build_puzzle_content_text(puzzle: Puzzle) -> str:
