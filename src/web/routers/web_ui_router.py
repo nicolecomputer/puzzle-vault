@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -471,8 +471,37 @@ async def source_detail(
             "schedule_interval_hours": source.schedule_interval_hours,
             "next_run_at": source.next_run_at,
             "has_running_agent": has_running_agent,
+            "has_icon": source.has_icon,
         },
     )
+
+
+@web_ui_router.post("/sources/{id}/icon")
+@require_auth
+async def upload_source_icon(
+    request: Request,
+    id: str,
+    icon: UploadFile = File(...),
+    db: Session = Depends(get_db),
+) -> StarletteResponse:
+    """Upload an icon for a source."""
+    from src.shared.config import settings
+
+    source = db.query(Source).filter(Source.id == id).first()
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+
+    if not icon.content_type or icon.content_type != "image/png":
+        raise HTTPException(status_code=400, detail="Icon must be a PNG image")
+
+    icon_path = settings.puzzles_path / source.folder_name / "icon.png"
+    icon_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with icon_path.open("wb") as f:
+        content = await icon.read()
+        f.write(content)
+
+    return RedirectResponse(url=f"/sources/{id}", status_code=303)
 
 
 @web_ui_router.get("/sources/{id}/agent", response_class=HTMLResponse)

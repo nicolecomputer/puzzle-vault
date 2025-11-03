@@ -66,6 +66,27 @@
             </tr>
         </table>
 
+        <table class="link-section">
+            <tr>
+                <th>Source Icon</th>
+            </tr>
+            <tr>
+                <td>
+                    {% if has_icon %}
+                    <p style="margin-bottom: 10px;">✅ Icon uploaded</p>
+                    {% else %}
+                    <p style="margin-bottom: 10px;">No icon uploaded</p>
+                    {% endif %}
+                    <form action="/sources/{{ source_id }}/icon" method="POST" enctype="multipart/form-data">
+                        <input type="file" name="icon" accept="image/png" required>
+                        <button type="submit" class="add-puzzle-btn">Upload Icon</button>
+                    </form>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #666;">Must be a PNG file. Recommended size:
+                        512x512px</p>
+                </td>
+            </tr>
+        </table>
+
         <table class="puzzles-section">
             <tr>
                 <th colspan="4">{{ total_puzzles }} Puzzles</th>
