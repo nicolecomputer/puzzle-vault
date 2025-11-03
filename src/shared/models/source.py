@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import shutil
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -40,9 +40,13 @@ class Source(Base):
     last_scheduled_run_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     user: Mapped[User] = relationship("User", back_populates="sources")
@@ -63,7 +67,7 @@ class Source(Base):
 
         # If never run, next run is now (will be picked up by scheduler)
         if not self.last_scheduled_run_at:
-            return datetime.utcnow()
+            return datetime.now(UTC)
 
         return self.last_scheduled_run_at + timedelta(
             hours=self.schedule_interval_hours

@@ -2,7 +2,7 @@
 
 import importlib
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 from pydantic import BaseModel
 
@@ -58,7 +58,7 @@ def discover_agents() -> dict[str, AgentInfo]:
                 try:
                     module = importlib.import_module(f"src.agents.{item.name}")
                     if hasattr(module, "AGENT_INFO"):
-                        info: AgentInfo = module.AGENT_INFO
+                        info = cast(AgentInfo, module.AGENT_INFO)
                         agents[info.type] = info
                 except ImportError:
                     pass

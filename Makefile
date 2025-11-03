@@ -39,4 +39,4 @@ lint-fix:
 	uv run ruff check --fix .
 
 typecheck:
-	uv run pyright src/
+	uv run ty check src/

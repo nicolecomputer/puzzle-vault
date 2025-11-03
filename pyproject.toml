@@ -43,19 +43,10 @@ ignore = [
   "B008", # function call in argument defaults (common FastAPI pattern)
 ]
 
-[tool.pyright]
-pythonVersion = "3.11"
-typeCheckingMode = "basic"
-reportMissingTypeStubs = false
-reportUnknownMemberType = false
-reportUnknownArgumentType = false
-reportUnknownVariableType = false
-reportMissingImports = false
-
 [dependency-groups]
 dev = [
   "honcho>=2.0.0",
-  "pyright>=1.1.407",
+  "ty>=0.0.1a25",
   "pytest>=8.4.2",
   "pytest-cov>=7.0.0",
   "pytest-describe>=2.2.0",

@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +22,7 @@ class AgentLogger:
         """
         self.source = source
         self.source_id = source.folder_name
-        self.started_at = datetime.utcnow()
+        self.started_at = datetime.now(UTC)
         self.logs: list[dict[str, Any]] = []
 
         # Create agents directory structure
@@ -39,7 +39,7 @@ class AgentLogger:
             **kwargs: Additional context to include
         """
         entry = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": level,
             "message": message,
             **kwargs,
@@ -81,7 +81,7 @@ class AgentLogger:
         Returns:
             Path to the saved log file
         """
-        completed_at = datetime.utcnow()
+        completed_at = datetime.now(UTC)
 
         # Format: YYYYMMDD_HHMMSS.json
         timestamp = self.started_at.strftime("%Y%m%d_%H%M%S")

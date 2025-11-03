@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -34,7 +34,7 @@ async def process_task(task: AgentTask, db: Session) -> None:
     logger.info(f"Processing task {task.id} for source {task.source_id}")
 
     task.status = "running"
-    task.started_at = datetime.utcnow()
+    task.started_at = datetime.now(UTC)
     db.commit()
 
     # Get source
@@ -42,7 +42,7 @@ async def process_task(task: AgentTask, db: Session) -> None:
     if not source:
         logger.error(f"Source {task.source_id} not found")
         task.status = "failed"
-        task.completed_at = datetime.utcnow()
+        task.completed_at = datetime.now(UTC)
         db.commit()
         return
 
@@ -89,7 +89,7 @@ async def process_task(task: AgentTask, db: Session) -> None:
             )
             logger.error(f"Task {task.id} failed: {result.error_message}")
 
-        task.completed_at = result.completed_at or datetime.utcnow()
+        task.completed_at = result.completed_at or datetime.now(UTC)
 
         # Save log file
         log_file = agent_logger.save(
@@ -103,7 +103,7 @@ async def process_task(task: AgentTask, db: Session) -> None:
         logger.exception(f"Error processing task {task.id}")
         agent_logger.exception("Unexpected error during agent execution", e)
         task.status = "failed"
-        task.completed_at = datetime.utcnow()
+        task.completed_at = datetime.now(UTC)
 
         # Save log file with error
         log_file = agent_logger.save(

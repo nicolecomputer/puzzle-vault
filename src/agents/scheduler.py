@@ -3,7 +3,7 @@
 import logging
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -74,7 +74,7 @@ class AgentScheduler:
             )
             sources = db.execute(stmt).scalars().all()
 
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             for source in sources:
                 try:
                     self._maybe_queue_task(source, now, db)

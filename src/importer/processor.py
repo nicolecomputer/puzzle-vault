@@ -4,7 +4,7 @@ import hashlib
 import json
 import logging
 import shutil
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import puz  # type: ignore[import]
@@ -218,7 +218,7 @@ class FileProcessor:
         errors_dir = self.data_dir / folder_name / "errors"
         errors_dir.mkdir(parents=True, exist_ok=True)
 
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         base_name = puz_file.stem
 
         dest_puz = errors_dir / f"{base_name}_{timestamp}.puz"

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Integer, String, Uuid
@@ -28,6 +28,8 @@ class User(Base):
     feed_key: Mapped[uuid.UUID] = mapped_column(
         Uuid, unique=True, index=True, nullable=False, default=uuid.uuid4
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC)
+    )
 
     sources: Mapped[list[Source]] = relationship("Source", back_populates="user")

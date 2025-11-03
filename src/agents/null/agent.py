@@ -1,7 +1,7 @@
 """Null agent - does nothing but log that it ran."""
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 
 from src.agents.base_agent import BaseAgent, FetchResult
 from src.agents.null.config import NullConfig
@@ -38,5 +38,5 @@ class NullAgent(BaseAgent):
             success=True,
             puzzles_found=0,
             error_message=None,
-            completed_at=datetime.utcnow(),
+            completed_at=datetime.now(UTC),
         )

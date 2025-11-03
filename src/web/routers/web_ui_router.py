@@ -347,13 +347,13 @@ async def create_preset_source(
     db.refresh(source)
 
     # Queue an immediate first run
-    from datetime import datetime
+    from datetime import UTC, datetime
 
     from src.shared.models.agent_task import AgentTask
 
     task = AgentTask(source_id=source.id, status="pending")
     db.add(task)
-    source.last_scheduled_run_at = datetime.utcnow()
+    source.last_scheduled_run_at = datetime.now(UTC)
     db.commit()
 
     return RedirectResponse(url=f"/sources/{source.id}", status_code=303)
@@ -406,13 +406,13 @@ async def create_source(
 
     # If scheduling is enabled, queue an immediate first run
     if final_schedule_enabled and final_agent_type and agent_enabled:
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from src.shared.models.agent_task import AgentTask
 
         task = AgentTask(source_id=source.id, status="pending")
         db.add(task)
-        source.last_scheduled_run_at = datetime.utcnow()
+        source.last_scheduled_run_at = datetime.now(UTC)
         db.commit()
 
     return RedirectResponse(url=f"/sources/{source.id}", status_code=303)

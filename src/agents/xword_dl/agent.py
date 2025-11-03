@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import xword_dl  # type: ignore[import]
@@ -121,5 +121,5 @@ class XwordDlAgent(BaseAgent):
             success=success,
             puzzles_found=puzzles_found,
             error_message=error_message if not success else None,
-            completed_at=datetime.utcnow(),
+            completed_at=datetime.now(UTC),
         )

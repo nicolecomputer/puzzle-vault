@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String
@@ -29,7 +29,9 @@ class AgentTask(Base):
     status: Mapped[str] = mapped_column(
         String, nullable=False, default="pending"
     )  # pending, running, completed, failed
-    queued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    queued_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(UTC)
+    )
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
