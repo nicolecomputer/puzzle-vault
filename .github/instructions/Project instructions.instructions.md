@@ -59,7 +59,7 @@ Additionally, each source folder can contain:
      - `{puzzle_date}.puz` and `{puzzle_date}.meta.json` (e.g., `2020-12-21.puz`)
      - If a puzzle with the same date already exists, a counter is appended (e.g., `2020-12-21-2.puz`, `2020-12-21-3.puz`)
    - The filename (without path) is stored in the puzzle's `filename` field
-   - Preview images use the same naming scheme (e.g., `2020-12-21.preview.png`)
+   - Preview images use the same naming scheme (e.g., `2020-12-21.preview.svg`)
 
 4. **Failure**: If import fails:
    - Both files are moved to `errors/` and renamed with timestamp: `{filename}_{timestamp}.puz` and `{filename}_{timestamp}.meta.json`
