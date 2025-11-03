@@ -86,7 +86,7 @@ def time_ago(dt: datetime | None) -> str:
 templates.env.filters["format_datetime"] = format_datetime
 templates.env.filters["time_ago"] = time_ago
 
-app.mount("/static", StaticFiles(directory="src/web/templates"), name="static")
+app.mount("/static", StaticFiles(directory="src/web/templates/static"), name="static")
 
 # Include all routes from routers
 app.include_router(web_ui_router)

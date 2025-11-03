@@ -101,8 +101,17 @@ async def login(
         request.session["logged_in"] = True
         request.session["username"] = username
         request.session["user_id"] = user.id
-        # Redirect to user puzzles page
-        return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
+
+        # Check if user has sources
+        has_sources = (
+            db.query(Source).filter(Source.user_id == user.id).first() is not None
+        )
+
+        # Redirect to feed if they have sources, otherwise to sources page
+        if has_sources:
+            return RedirectResponse(url=f"/user/{username}/feeds/new", status_code=303)
+        else:
+            return RedirectResponse(url=f"/user/{username}/sources", status_code=303)
 
     # Invalid credentials - show login page with error
     templates = get_templates()
