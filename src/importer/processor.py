@@ -196,7 +196,7 @@ class FileProcessor:
         # Derive other filenames from the base
         filename_stem = Path(filename).stem
         dest_meta = puzzles_dir / f"{filename_stem}.meta.json"
-        dest_preview = puzzles_dir / f"{filename_stem}.preview.png"
+        dest_preview = puzzles_dir / f"{filename_stem}.preview.svg"
 
         shutil.move(str(puz_file), str(dest_puz))
         shutil.move(str(meta_file), str(dest_meta))

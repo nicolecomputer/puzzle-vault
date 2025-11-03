@@ -65,7 +65,7 @@ async def get_feed(
     return JSONResponse(content=feed_data)
 
 
-@feed_router.get("/puzzles/{puzzle_id}.preview.png", response_class=FileResponse)
+@feed_router.get("/puzzles/{puzzle_id}.preview.svg", response_class=FileResponse)
 async def get_puzzle_preview(
     puzzle_id: str, db: Session = Depends(get_db)
 ) -> StarletteResponse:
@@ -80,7 +80,7 @@ async def get_puzzle_preview(
 
     return FileResponse(
         path=preview_path,
-        media_type="image/png",
+        media_type="image/svg+xml",
         headers={"Content-Disposition": "inline"},
     )
 
