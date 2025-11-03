@@ -114,7 +114,11 @@ class AgentScheduler:
 
         # 1-minute cooldown: don't run if last run was less than a minute ago
         cooldown_period = timedelta(minutes=1)
-        if now - source.last_scheduled_run_at < cooldown_period:
+        last_run = source.last_scheduled_run_at
+        # Ensure last_run is timezone-aware for comparison (backward compatibility)
+        if last_run and last_run.tzinfo is None:
+            last_run = last_run.replace(tzinfo=UTC)
+        if last_run and now - last_run < cooldown_period:
             logger.debug(
                 f"Cooldown active for source {source.name}, skipping scheduled run"
             )

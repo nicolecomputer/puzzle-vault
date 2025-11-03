@@ -69,9 +69,12 @@ class Source(Base):
         if not self.last_scheduled_run_at:
             return datetime.now(UTC)
 
-        return self.last_scheduled_run_at + timedelta(
-            hours=self.schedule_interval_hours
-        )
+        # Ensure last_scheduled_run_at is timezone-aware (for backward compatibility)
+        last_run = self.last_scheduled_run_at
+        if last_run.tzinfo is None:
+            last_run = last_run.replace(tzinfo=UTC)
+
+        return last_run + timedelta(hours=self.schedule_interval_hours)
 
     @property
     def has_icon(self) -> bool:
