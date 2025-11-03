@@ -209,6 +209,70 @@ async def user_sources(
     )
 
 
+@web_ui_router.get("/user/{id}/feeds/new", response_class=HTMLResponse)
+@require_auth
+async def user_feeds_new(
+    request: Request, id: str, page: int = 1, db: Session = Depends(get_db)
+) -> StarletteResponse:
+    """Display all user's puzzles in reverse chronological order, 7 days per page."""
+    user = get_user_from_session(request, db)
+
+    all_puzzles = db.query(Puzzle).join(Source).filter(Source.user_id == user.id).all()
+    sorted_puzzles = sort_puzzles_by_date(all_puzzles)
+
+    if not sorted_puzzles:
+        templates = get_templates()
+        return templates.TemplateResponse(
+            "user_feeds_new.html",
+            {
+                "request": request,
+                "puzzles": [],
+                "page": 1,
+                "total_pages": 1,
+                "user_id": id,
+            },
+        )
+
+    # Group puzzles by date
+    from collections import defaultdict
+
+    puzzles_by_date = defaultdict(list)
+    for puzzle in sorted_puzzles:
+        puzzle_date = (
+            puzzle.puzzle_date if puzzle.puzzle_date else puzzle.created_at.date()
+        )
+        puzzles_by_date[puzzle_date].append(puzzle)
+
+    # Get unique dates in order
+    unique_dates = sorted(puzzles_by_date.keys(), reverse=True)
+
+    # Paginate by 7 days at a time
+    days_per_page = 7
+    total_pages = (len(unique_dates) + days_per_page - 1) // days_per_page
+    validated_page = max(1, min(page, total_pages))
+
+    start_idx = (validated_page - 1) * days_per_page
+    end_idx = start_idx + days_per_page
+    page_dates = unique_dates[start_idx:end_idx]
+
+    # Get all puzzles for the dates on this page
+    page_puzzles = []
+    for puzzle_date in page_dates:
+        page_puzzles.extend(puzzles_by_date[puzzle_date])
+
+    templates = get_templates()
+    return templates.TemplateResponse(
+        "user_feeds_new.html",
+        {
+            "request": request,
+            "puzzles": page_puzzles,
+            "page": validated_page,
+            "total_pages": total_pages,
+            "user_id": id,
+        },
+    )
+
+
 @web_ui_router.get("/sources/new", response_class=HTMLResponse)
 @require_auth
 async def new_source(request: Request) -> StarletteResponse:

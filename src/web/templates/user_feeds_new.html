@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Puzzles</title>
+    <link rel="stylesheet" href="/static/css/base.css?v={{ cache_buster }}">
+    <link rel="stylesheet" href="/static/css/feeds.css?v={{ cache_buster }}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>Puzzles</h1>
+        </div>
+
+        {% if puzzles %}
+        {% set current_date = namespace(value=None) %}
+        {% for puzzle in puzzles %}
+        {% set puzzle_date = puzzle.puzzle_date if puzzle.puzzle_date else puzzle.created_at.date() %}
+        {% if current_date.value != puzzle_date %}
+        {% if not loop.first %}
+    </div>
+    </div>
+    {% endif %}
+    {% set current_date.value = puzzle_date %}
+    <div class="date-section">
+        <div class="date-header">
+            {% if puzzle.puzzle_date %}
+            <div class="day-of-week">{{ puzzle.puzzle_date.strftime('%A') }}</div>
+            <div class="date-subtitle">{{ puzzle.puzzle_date.strftime('%B %-d, %Y') }}</div>
+            {% else %}
+            <div class="day-of-week">{{ puzzle.created_at.strftime('%A') }}</div>
+            <div class="date-subtitle">{{ puzzle.created_at.strftime('%B %-d, %Y') }} (No puzzle date)</div>
+            {% endif %}
+        </div>
+        <div class="puzzles-grid">
+            {% endif %}
+            <div class="puzzle-card">
+                <a href="/puzzles/{{ puzzle.id }}/download" class="puzzle-link">
+                    <div class="puzzle-preview">
+                        {% if puzzle.has_preview() %}
+                        <img src="/puzzles/{{ puzzle.id }}.preview.png" alt="{{ puzzle.title }} preview">
+                        {% else %}
+                        <div class="puzzle-preview-placeholder">
+                            <svg width="80" height="80" viewBox="0 0 80 80" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <rect x="10" y="10" width="60" height="60" stroke="currentColor" stroke-width="2"
+                                    fill="none" />
+                                <line x1="30" y1="10" x2="30" y2="70" stroke="currentColor" stroke-width="1" />
+                                <line x1="50" y1="10" x2="50" y2="70" stroke="currentColor" stroke-width="1" />
+                                <line x1="10" y1="30" x2="70" y2="30" stroke="currentColor" stroke-width="1" />
+                                <line x1="10" y1="50" x2="70" y2="50" stroke="currentColor" stroke-width="1" />
+                            </svg>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="puzzle-info">
+                        {% if puzzle.source.has_icon %}
+                        <div class="puzzle-source-icon">
+                            <img src="/sources/{{ puzzle.source.folder_name }}/icon.png"
+                                alt="{{ puzzle.source.name }} icon">
+                        </div>
+                        {% endif %}
+                        <div class="puzzle-text-content">
+                            <h3 class="puzzle-title">{{ puzzle.title }}</h3>
+                            <div class="puzzle-author">{{ puzzle.author or 'Unknown Author' }}</div>
+                            <div class="puzzle-source">{{ puzzle.source.name }}</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% if loop.last %}
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% else %}
+    <div class="no-puzzles">
+        <p>No puzzles found. Add a source to get started!</p>
+        <a href="/sources/new" class="btn-primary">Add Source</a>
+    </div>
+    {% endif %}
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="/user/{{ user_id }}/feeds/new?page={{ page - 1 }}" class="btn btn-link pagination-btn">← Previous</a>
+        {% else %}
+        <span class="btn btn-link pagination-btn disabled">← Previous</span>
+        {% endif %}
+
+        <span class="pagination-info">Page {{ page }} of {{ total_pages }}</span>
+
+        {% if page < total_pages %} <a href="/user/{{ user_id }}/feeds/new?page={{ page + 1 }}"
+            class="btn btn-link pagination-btn">Next →</a>
+            {% else %}
+            <span class="btn btn-link pagination-btn disabled">Next →</span>
+            {% endif %}
+    </div>
+    {% endif %}
+    </div>
+</body>
+
+</html>
