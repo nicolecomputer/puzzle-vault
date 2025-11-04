@@ -1,1 +1,10 @@
 Generic single-database configuration.
+
+## Project beliefs
+
+- Puzzles are important and your archive should be important too; We are good stewards for your puzzles in the longterm
+- Data storage is just files. It's on disk, it's easy to find a specific puzzle and share it (or backup your whole archive)
+- Your archive integrates with other apps so that it's comfortable to solve puzzles wherever you solve puzzles
+- Complexity should be isolated and it's ok to have multiple processes to isolate that complexity (agents, importers, and the web interface are different concerns)
+- This project should prioritize self-hosted and not be built for web-scale or production use
+- Booting this project should be easy as `docker run` and not require complicated dependencies
