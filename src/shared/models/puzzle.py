@@ -55,9 +55,9 @@ class Puzzle(Base):
         """
         puz_path = Path(self.file_path)
         if self.filename:
-            preview_filename = Path(self.filename).stem + ".preview.png"
+            preview_filename = Path(self.filename).stem + ".preview.svg"
             return puz_path.parent / preview_filename
-        return puz_path.parent / f"{self.id}.preview.png"
+        return puz_path.parent / f"{self.id}.preview.svg"
 
     def has_preview(self) -> bool:
         """Check if a preview image exists for this puzzle.
